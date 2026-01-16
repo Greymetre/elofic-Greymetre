@@ -19,6 +19,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $this->call([
+            MasterDistributorSeeder::class,
+        ]);
+        
         if(DB::table('permissions')->count() == 0)
         {
             DB::table('permissions')->insert([

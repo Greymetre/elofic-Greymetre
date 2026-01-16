@@ -1,5 +1,11 @@
 <x-app-layout>
+  
   <style>
+    .selection{
+        z-index: 999 !important; 
+    }
+
+
     a.custom-btn.create {
       background-color: #00aadb !important;
       font-size: 12px;
@@ -175,7 +181,7 @@
               <div class="col-md-6">
                 <div class="input_section">
                   <label class="col-form-label">User</label>
-                  <select class="form-control select2" name="user_id" id="user_id" style="width: 100%;" required>
+                  <select class="form-control " name="user_id" id="user_id" style="width: 100%;" required>
                     <option value="">Select User</option>
                     @if(@isset($users))
                     @foreach($users as $user)
@@ -186,18 +192,33 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="input_section">
-                  <label class="col-form-label">Punch In</label>
-                  <input type="text" name="punchin_date" id="punchin_date" class="form-control datetimepicker" value="{!! old( 'punchin_date') !!}" required>
-                </div>
-              </div>
-              <div class="col-md-6">
+        <div class="input_section">
+          <label class="col-form-label">Punch In Date</label>
+          <input type="text" name="punchin_date" id="punchin_date" 
+                 class="form-control datepicker" 
+                 value="{{ old('punchin_date') }}" 
+                 placeholder="Select Date" 
+                 autocomplete="off" readonly required>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="input_section">
+          <label class="col-form-label">Punch In Time</label>
+          <input type="text" name="punchin_time" id="punchin_time" 
+                 class="form-control timepicker" 
+                 value="{{ old('punchin_time') }}" 
+                 placeholder="Select Time" 
+                 autocomplete="off" required>
+        </div>
+      </div>
+              <!-- <div class="col-md-6">
                 <div class="input_section">
                   <label class="col-form-label">Tour Plan</label>
                   <input type="text" readonly name="tour_name" id="tour_name" class="form-control" value="{!! old( 'tour_name') !!}" required>
                   <input type="hidden" readonly name="tourid" id="tourid" class="form-control" value="{!! old( 'tourid') !!}" required>
                 </div>
-              </div>
+              </div> -->
               <div class="col-md-6">
                 <div class="input_section">
                   <label class="col-form-label">Working Type</label>
@@ -214,13 +235,13 @@
               </div>
               <div class="col-md-6" id="city_div" style="display: none;">
                 <label class="col-form-label">Select City</label>
-                <select class="form-control select2" name="city" id="city">
+                <select class="form-control " name="city" id="city">
 
                 </select>
               </div>
               <div class="col-md-6">
                 <div class="input_section">
-                  <label class="col-form-label">Punch In Summary</label>
+                  <label class="col-form-label">Plan for the day</label>
                   <input type="text" name="punchin_summary" id="punchin_summary" class="form-control" value="{!! old( 'punchin_summary') !!}">
                 </div>
               </div>
@@ -280,7 +301,40 @@
   <script type="text/javascript">
     $(document).ready(function() {
 
+    $('.select2').select2({
+        placeholder: "Select User",
+        allowClear: true,
+        width: '100%'
+    });
+
+    $('#submitAttendance').on('shown.bs.modal', function () {
+        $('#user_id_c').select2('destroy').select2();  // re-init
+    });
+
       //new user filters  starts
+
+      $('#punchin_date').datetimepicker({
+    format: 'YYYY-MM-DD',
+    useCurrent: false,
+    maxDate: moment(),       
+    icons: {
+      time: "fa fa-clock-o",
+      date: "fa fa-calendar",
+      up: "fa fa-arrow-up",
+      down: "fa fa-arrow-down"
+    }
+  });
+
+  $('#punchin_time').datetimepicker({
+    format: 'HH:mm',            
+    useCurrent: false,
+    icons: {
+      time: "fa fa-clock-o",
+      date: "fa fa-calendar",
+      up: "fa fa-arrow-up",
+      down: "fa fa-arrow-down"
+    }
+  });
       var isSuperAdmin = @json(Auth::user()->hasRole('superadmin'));
 
       console.log(isSuperAdmin);
@@ -650,47 +704,71 @@
 
     })
 
-    $(document).on("dp.change", "#punchin_date", function(e) {
-      var formatedValue = moment(e.date).format('YYYY-MM-DD');
-      var todayDate = moment().format('YYYY-MM-DD');
+    // $(document).on("dp.change", "#punchin_date", function(e) {
+    //   var formatedValue = moment(e.date).format('YYYY-MM-DD');
+    //   var todayDate = moment().format('YYYY-MM-DD');
 
-      var user_id = $("#user_id").val();
-      if (user_id && user_id != null && user_id != '') {
-        if (user_id == '{{auth()->user()->id}}') {
-          if (formatedValue === todayDate) {
-            $("#date_error").addClass('d-none');
-            $("#add_attend").prop('disabled', false);
-          } else {
-            $("#date_error").removeClass('d-none');
-            $("#add_attend").prop('disabled', true);
-            return false;
-          }
-        }
-        var tour_plan = getTourPlanByUserAndDate(formatedValue, user_id);
+    //   var user_id = $("#user_id").val();
+    //   if (user_id && user_id != null && user_id != '') {
+    //     if (user_id == '{{auth()->user()->id}}') {
+    //       if (formatedValue === todayDate) {
+    //         $("#date_error").addClass('d-none');
+    //         $("#add_attend").prop('disabled', false);
+    //       } else {
+    //         $("#date_error").removeClass('d-none');
+    //         $("#add_attend").prop('disabled', true);
+    //         return false;
+    //       }
+    //     }
+    //     var tour_plan = getTourPlanByUserAndDate(formatedValue, user_id);
+    //   }
+    // });
+
+    // $(document).on("change", "#user_id", function(e) {
+    //   var selectedDate = $('#punchin_date').val();
+    //   if (selectedDate && selectedDate != null && selectedDate != '') {
+    //     var formatedValue = moment(selectedDate).format('YYYY-MM-DD');
+    //     console.log(formatedValue);
+    //     var todayDate = moment().format('YYYY-MM-DD');
+
+    //     var user_id = $(this).val();
+    //     if (user_id == '{{auth()->user()->id}}') {
+    //       if (formatedValue === todayDate) {
+    //         $("#date_error").addClass('d-none');
+    //         $("#add_attend").prop('disabled', false);
+    //       } else {
+    //         $("#date_error").removeClass('d-none');
+    //         $("#add_attend").prop('disabled', true);
+    //         return false;
+    //       }
+    //     }
+    //     var tour_plan = getTourPlanByUserAndDate(formatedValue, user_id);
+    //   }
+    // });
+
+    $("#punchin_date, #user_id").on("change dp.change", function() {
+    let selectedDate = $('#punchin_date').val();   // YYYY-MM-DD
+    let today      = moment().format('YYYY-MM-DD');
+    let user_id    = $("#user_id").val();
+
+    if (!selectedDate) return;
+
+    if (user_id == '{{ auth()->user()->id }}') {
+      if (selectedDate === today) {
+        $("#date_error").addClass('d-none');
+        $("#add_attend").prop('disabled', false);
+      } else {
+        $("#date_error").removeClass('d-none');
+        $("#add_attend").prop('disabled', true);
+        return;
       }
-    });
+    }
 
-    $(document).on("change", "#user_id", function(e) {
-      var selectedDate = $('#punchin_date').val();
-      if (selectedDate && selectedDate != null && selectedDate != '') {
-        var formatedValue = moment(selectedDate).format('YYYY-MM-DD');
-        console.log(formatedValue);
-        var todayDate = moment().format('YYYY-MM-DD');
+    // Tour plan check (date only भेज रहे हैं)
+    getTourPlanByUserAndDate(selectedDate, user_id);
+  });
 
-        var user_id = $(this).val();
-        if (user_id == '{{auth()->user()->id}}') {
-          if (formatedValue === todayDate) {
-            $("#date_error").addClass('d-none');
-            $("#add_attend").prop('disabled', false);
-          } else {
-            $("#date_error").removeClass('d-none');
-            $("#add_attend").prop('disabled', true);
-            return false;
-          }
-        }
-        var tour_plan = getTourPlanByUserAndDate(formatedValue, user_id);
-      }
-    });
+
 
     $("#working_type").on("change", function() {
       var selectedOption = $(this).find('option:selected');

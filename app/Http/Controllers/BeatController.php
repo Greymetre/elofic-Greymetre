@@ -54,6 +54,13 @@ class BeatController extends Controller
     return view('beats.create', compact('users', 'customers', 'states', 'cities', 'districts'))->with('beats', $this->beats);
   }
 
+
+
+
+
+
+  
+
   /**
    * Store a newly created resource in storage.
    *

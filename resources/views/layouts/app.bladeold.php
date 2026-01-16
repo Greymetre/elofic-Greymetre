@@ -2057,30 +2057,31 @@
          </div>
       </div>
    </div>
-   <script src="{{ url('/').'/'.asset('assets/js/core/jquery.validate.js') }}"></script>
+   <script src="{{ asset('assets/js/core/jquery.validate.js') }}"></script>
    <!-- Bootstrap -->
-   <script src="{{ url('/').'/'.asset('assets/js/core/popper.min.js') }}"></script>
+   <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
    <!-- overlayScrollbars -->
-   <script src="{{ url('/').'/'.asset('assets/js/core/bootstrap-material-design.min.js') }}"></script>
+   <script src="{{ asset('assets/js/core/bootstrap-material-design.min.js') }}"></script>
    <!-- DataTables -->
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/jquery.dataTables.min.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/dataTables.responsive.min.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/bootstrap-tagsinput.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/jquery.dataTables.min.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/dataTables.responsive.min.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/bootstrap-tagsinput.js') }}"></script>
    <!-- OPTIONAL SCRIPTS -->
    <!-- Select2 -->
-   <script src="{{ url('/').'/'.asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/sweetalert2.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/jquery.validate.min.js') }}"></script>
+   <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/sweetalert2.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/jquery.validate.min.js') }}"></script>
    <!-- jquery-validation -->
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/jquery.bootstrap-wizard.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/bootstrap-selectpicker.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/bootstrap-datetimepicker.min.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/jquery.bootstrap-wizard.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/bootstrap-selectpicker.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/bootstrap-datetimepicker.min.js') }}"></script>
    <!-- OPTIONAL SCRIPTS -->
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/chartist.min.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/plugins/bootstrap-notify.js') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/js/material-dashboard.js?v=2.1.2') }}"></script>
-   <script src="{{ url('/').'/'.asset('assets/demo/demo.js') }}"></script>
+   <script src="{{ asset('assets/js/plugins/chartist.min.js') }}"></script>   
+   <!-- <script src="{{ url('/').'/'.asset('assets/js/plugins/chartist.min.js') }}"></script> -->
+   <script src="{{ asset('assets/js/plugins/bootstrap-notify.js') }}"></script>
+   <script src="{{ asset('assets/js/material-dashboard.js?v=2.1.2') }}"></script>
+   <script src="{{ asset('assets/demo/demo.js') }}"></script>
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" integrity="sha512-hievggED+/IcfxhYRSr4Auo1jbiOczpqpLZwfTVL/6hFACdbI3WQ8S9NCX50gsM9QVE+zLk/8wb9TlgriFbX+Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js" integrity="sha512-F636MAkMAhtTplahL9F6KmTfxTmYcAcjcCkyu0f0voT3N/6vzAuJ4Num55a0gEJ+hRLHhdz3vDvZpf6kqgEa5w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
    <script>

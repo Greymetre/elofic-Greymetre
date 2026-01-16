@@ -6,6 +6,9 @@ return [
     'sidemenu'                           => [
         'dashboard'         => 'Dashboard',
         'customersDashboard'=> 'Customer Dashboard',
+        'master_distributors' => 'Master Distributors',
+        'master_distributor_list' => 'Distributor',
+        'secondary_customers' => 'Secondary Customers',
         'address_master'    => 'Address',
         'address_country'   => 'Country',
         'address_state'     => 'State',
@@ -13,6 +16,7 @@ return [
         'address_city'      => 'City',
         'address_pincode'   => 'Pincode',
         'customers_master'  => 'Customers',
+        'Secondenry_master' => 'Secondry Customer',
         // 'customers'         => 'Retailers',
         'customers'         => 'Customer Master',
         'distributors'      => 'Distributors',
@@ -622,6 +626,7 @@ return [
             'no'                => 'No',
             'id'                => 'ID',
             'name'             => 'Name',
+            'customer_name'    => 'Distributor Legal Name',
             'first_name'        => 'First Name',
             'last_name'        => 'Last Name',
             'mobile'        => 'Mobile',
@@ -662,6 +667,89 @@ return [
             'action'        => 'Action',
         ],
     ],
+
+
+    'distributorsss' => [
+    'create_title'                  => 'Create Distributor',
+    'edit_title'                    => 'Edit Distributor',
+    'title_singular'                => 'Distributor',
+    'title_plural'                  => 'Distributors',
+
+    // 1. Basic Distributor Information
+    'legal_name'                    => 'Distributor Legal Name',
+    'trade_name'                    => 'Trade / Business Name',
+    'distributor_code'              => 'Distributor Code / Unique ID',
+    'category'                      => 'Distributor Category',
+    'business_status'               => 'Business Status',
+    'business_start_date'           => 'Business Start Date',
+
+    // 2. Contact & Communication Details
+    'primary_contact_name'          => 'Primary Contact Person Name',
+    'primary_designation'           => 'Designation',
+    'primary_mobile'                => 'Primary Mobile Number',
+    'alternate_mobile'              => 'Alternate Mobile Number',
+    'primary_email'                 => 'Primary Email Address',
+    'secondary_email'               => 'Secondary Email Address',
+
+    // 3. Address & Location Information
+    'billing_address'               => 'Billing Address',
+    'shipping_address'              => 'Shipping / Delivery Address',
+    'address1'                      => 'Address Line 1',
+    'city'                          => 'City / Town',
+    'district'                      => 'District',
+    'state'                         => 'State',
+    'country'                       => 'Country',
+    'pincode'                       => 'Pincode / Postal Code',
+
+    // 4. Business & Operational Information
+    'sales_zone'                    => 'Sales Zone / Region',
+    'territory'                     => 'Area / Territory',
+    'beat'                          => 'Beat / Route Mapping',
+    'market_classification'         => 'Market Classification',
+    'competitor_brands'             => 'Competitor Brands Handled',
+
+    // 5. Compliance & Legal Information
+    'gst_number'                    => 'GST Number',
+    'pan_number'                    => 'PAN Number',
+    'registration_type'             => 'Business Registration Type',
+    'compliance_documents'          => 'Upload Documents (Soft Copy)',
+
+    // 6. Banking & Financial Information
+    'bank_name'                     => 'Bank Name',
+    'account_holder_name'           => 'Account Holder Name',
+    'account_number'                => 'Account Number',
+    'ifsc_code'                     => 'IFSC / SWIFT Code',
+    'branch_name'                   => 'Branch Name',
+    'credit_limit'                  => 'Credit Limit Assigned',
+    'credit_days'                   => 'Credit Days',
+    'avg_monthly_purchase'          => 'Average Monthly Purchase',
+    'outstanding_balance'           => 'Outstanding Balance',
+    'payment_method'                => 'Preferred Payment Method',
+    'cancelled_cheque'              => 'Image of Cancelled Cheque',
+
+    // 7. Sales & Performance Information
+    'monthly_sales_volume'          => 'Monthly Sales Volume (Approx.)',
+    'product_categories'            => 'Product Categories Handled',
+    'secondary_reporting'           => 'Secondary Sales Reporting Required',
+    'sales_history_12m'             => 'Last 12 Months Sales History',
+    'sales_executive'               => 'Assigned Sales Executive',
+    'supervisor'                    => 'Assigned Supervisor / ASM / RSM',
+    'customer_segment'              => 'Customer Segment',
+
+    // 8. Additional Information (Alerts)
+    'weekly_tai_alert'              => 'Weekly TAI Alert Target vs Achievement Annually',
+    'schemes_updates'               => 'Schemes Updates & New Launch Update',
+    'payment_pending_alert'         => 'Alert for Payment Pending Order List',
+    'inventory_status_alert'        => 'Inventory Status',
+
+    // 9. Operational & Business Capacity Information
+    'turnover'                      => 'Turnover',
+    'staff_strength'                => 'Staff Strength',
+    'logistics_capacity'            => 'Vehicles & Logistics Capacity',
+    'area_coverage'                 => 'Area Coverage',
+    'other_brands'                  => 'Other Manufacturers / Brands Handled',
+    'warehouse_size'                => 'Warehouse Size',
+],
 
     'distributors'     => [
         'title'          => 'Distributors',
@@ -1199,7 +1287,8 @@ return [
              'subcategory_name'  =>   'Subcategory Name', 
              'category_id'     =>   'Category ID', 
              'category_name'     =>   'Category Name', 
-             'brand_id'        =>   'Brand ID', 
+            //  'brand_id'        =>   'Brand ID', 
+            'maker'        =>   'Maker', 
              'brand_name'        =>   'Brand Name',
              'product_image'   =>   'Product Image', 
              'unit_id'         =>   'Unit ID', 
@@ -1633,4 +1722,38 @@ return [
         'client_paid'       => 'Client Paid',
         'pieces'            => 'Pieces',
     ],
+
+
+
+
+    // *************MASTER DISTRIBUTOR***************
+    'master_distributor' => [
+        'title' => 'Master Distributor',
+        'create_title' => 'Create Master Distributor',
+        'fields' => [
+            'legal_name' => 'Distributor Legal Name',
+            'trade_name' => 'Trade / Business Name',
+            'distributor_code' => 'Distributor Code',
+            'category' => 'Distributor Category',
+            'business_status' => 'Business Status',
+            'business_start_date' => 'Business Start Date',
+            'shop_image' => 'Shop Image',
+            'profile_image'        => 'Profile Image',
+            'primary_contact_name' => 'Primary Contact Person',
+            'designation' => 'Designation',
+            'primary_mobile' => 'Primary Mobile Number',
+            'alternate_mobile' => 'Alternate Mobile Number',
+            'primary_email' => 'Primary Email',
+            'secondary_email' => 'Secondary Email',
+            'gst_no' => 'GST Number',
+            'pan_no' => 'PAN Number',
+            'bank_name' => 'Bank Name',
+            'account_holder' => 'Account Holder Name',
+            'account_number' => 'Account Number',
+            'ifsc_code' => 'IFSC Code',
+            'cancelled_cheque_image' => 'Cancelled Cheque Image'
+        ]
+]
+
+
 ];

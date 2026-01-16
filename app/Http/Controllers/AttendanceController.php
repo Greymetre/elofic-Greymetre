@@ -56,6 +56,11 @@ class AttendanceController extends Controller
         File::move($path . '/' . $image, $path . '/finals/' . $image);
       }
     }
+
+    $users = User::select('id', 'name')
+        ->where('active', 'Y')
+        ->orderBy('name')
+        ->get();
     // foreach ($pinchinimages as $key => $value) {
     //     $newpath = str_ireplace('attendances', 'final', $value);
     //     Storage::move($value, $newpath);
@@ -65,7 +70,7 @@ class AttendanceController extends Controller
     //     // }           
     // }
 
-    return $dataTable->render('attendances.index');
+    return $dataTable->render('attendances.index', compact('users'));
   }
 
   public function attendancesInfo(Request $request)
