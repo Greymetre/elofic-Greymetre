@@ -1,278 +1,337 @@
 <x-app-layout>
-<div class="row">
-  <div class="col-md-12">
-    <div class="card">
-      <div class="card-header card-header-icon card-header-theme">
-        <div class="card-icon">
-          <i class="material-icons">perm_identity</i>
-        </div>
-        <h4 class="card-title">{{ trans('panel.global.create') }} {{ trans('panel.role.title_singular') }}
-          <span class="pull-right">
-            <div class="btn-group">
-              @if(auth()->user()->can(['role_access']))
-              <a href="{{ url('roles') }}" class="btn btn-just-icon btn-theme" title="{!! trans('panel.role.title_singular') !!}{!! trans('panel.global.list') !!}">
-                <i class="material-icons">next_plan</i>
-              </a>
-              @endif
-            </div>
-          </span>
-        </h4>
-      </div>
-      <div class="card-body">
-        @if(count($errors) > 0)
-        <div class="alert alert-danger">
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <i class="material-icons">close</i>
-          </button>
-          <span>
-            @foreach($errors->all() as $error)
-              <li>{{$error}}</li>
-            @endforeach
-          </span>
-        </div>
-        @endif
-        
-        <form method="POST" action="{{ route('roles.store') }}" enctype="multipart/form-data" id="storeRoleData">
-          @csrf
-          
-          <!-- Role Names Section -->
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <div class="inpu_section">
-                <label class="col-form-label">{{ trans('panel.role.fields.name') }}<span class="text-danger"> *</span></label>
-                <div class="form-group has-default bmd-form-group">
-                  <input class="form-control {{ $errors->has('title') ? 'is-invalid' : '' }}" type="text" name="name" id="title" value="{{ old('name', '') }}" maxlength="200" required>
-                  @if($errors->has('name'))
-                    <div class="invalid-feedback">{{ $errors->first('name') }}</div>
-                  @endif
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="inpu_section">
-                <label class="col-form-label">{{ trans('panel.role.fields.display_name') }}<span class="text-danger"> *</span></label>
-                <div class="form-group has-default bmd-form-group">
-                  <input class="form-control {{ $errors->has('display_name') ? 'is-invalid' : '' }}" type="text" name="display_name" id="display_name" value="{{ old('display_name', '') }}" maxlength="200" required>
-                  @if($errors->has('display_name'))
-                    <div class="invalid-feedback">{{ $errors->first('display_name') }}</div>
-                  @endif
-                </div>
-              </div>
-            </div>
-          </div>
+    <style>
+    /* ================= CONTAINER ================= */
+    .permission-container {
+        max-height: 400px;
+        overflow-y: auto;
+        overflow-x: auto;
+        position: relative;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background: #fafafa;
+    }
 
-          <!-- Permission Matrix Section -->
-          <div class="row">
-            <div class="col-md-12">
-              <h5 class="mb-3">{{ trans('panel.role.fields.permissions') }}<span class="text-danger"> *</span></h5>
-              
-              <!-- Search and Actions -->
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div style="width: 300px;">
-                  <input type="text" id="permissionSearch" class="form-control" placeholder="Start type permission name or type...">
-                </div>
-                <div>
-                  <button type="button" class="btn btn-info btn-sm select-all-permissions">{{ trans('panel.select_all') }}</button>
-                  <button type="button" class="btn btn-info btn-sm deselect-all-permissions">{{ trans('panel.deselect_all') }}</button>
-                </div>
-              </div>
+    /* ================= TABLE BASE ================= */
+    .permission-table {
+        width: 100%;
+        min-width: 1200px;
+        border-collapse: collapse;
+        /* keep row lines */
+        table-layout: auto;
+    }
 
-              <!-- Permission Matrix Table -->
-              <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                <table class="table table-bordered permission-matrix">
-                  <thead style="position: sticky; top: 0; background: #fff; z-index: 10;">
-                    <tr>
-                      <th style="width: 250px; min-width: 250px;">PERMISSION</th>
-                      <th class="text-center role-header" style="min-width: 150px;">
-                        <input type="text" class="form-control role-name-input" placeholder="Role Name" readonly value="{{ old('display_name', 'New Role') }}">
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody id="permissionTableBody">
-                    @php
-                      // Group permissions by category
-                      $groupedPermissions = [];
-                      foreach($permissions as $id => $permissionName) {
-                        // Extract category from permission name (e.g., "user_access" -> "User")
-                        $parts = explode('_', $permissionName);
-                        $category = ucfirst($parts[0]);
-                        if (!isset($groupedPermissions[$category])) {
-                          $groupedPermissions[$category] = [];
-                        }
-                        $groupedPermissions[$category][$id] = $permissionName;
-                      }
-                    @endphp
+    /* ================= CELL BASE ================= */
+    .permission-table th,
+    .permission-table td {
+        padding: 8px 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid #e0e0e0;
+        /* horizontal lines */
+        border-right: 1px solid #e0e0e0;
+        /* vertical lines */
+    }
 
-                    @foreach($groupedPermissions as $category => $categoryPermissions)
-                    <!-- Category Header -->
-                    <tr class="category-row">
-                      <td colspan="2" style="background: #f5f5f5; font-weight: bold; cursor: pointer;" onclick="toggleCategory('{{ $category }}')">
-                        <i class="material-icons category-icon" style="vertical-align: middle; font-size: 18px;">expand_more</i>
-                        {{ $category }} <span class="badge badge-secondary">{{ count($categoryPermissions) }}</span>
-                      </td>
-                    </tr>
-                    
-                    <!-- Permission Rows -->
-                    @foreach($categoryPermissions as $id => $permissionName)
-                    <tr class="permission-row category-{{ $category }}" data-permission="{{ strtolower($permissionName) }}" data-category="{{ $category }}">
-                      <td>
-                        <label class="mb-0" style="cursor: pointer;">
-                          <input type="checkbox" name="permissions[]" value="{{ $id }}" class="permission-checkbox mr-2" {{ in_array($id, old('permissions', [])) ? 'checked' : '' }}>
-                          {{ ucwords(str_replace('_', ' ', $permissionName)) }}
-                        </label>
-                      </td>
-                      <td class="text-center">
-                        <div class="custom-control custom-checkbox d-inline-block">
-                          <input type="checkbox" class="custom-control-input permission-toggle" data-permission-id="{{ $id }}" id="perm_{{ $id }}" {{ in_array($id, old('permissions', [])) ? 'checked' : '' }}>
-                          <label class="custom-control-label" for="perm_{{ $id }}">
-                            <i class="material-icons" style="color: #4caf50; font-size: 20px;">check_box</i>
-                          </label>
+    /* remove last column vertical line */
+    .permission-table th:last-child,
+    .permission-table td:last-child {
+        border-right: none;
+    }
+
+    /* ================= PERMISSION COLUMN ================= */
+    .permission-table th:first-child,
+    .permission-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background: #fafafa;
+
+        /* 🔥 INCREASED WIDTH */
+        min-width: 420px;
+        max-width: 420px;
+
+        color: #000;
+        font-weight: 500;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    /* ================= HEADER ================= */
+    .permission-table thead th {
+        position: sticky;
+        top: 0;
+        background: #fafafa;
+        z-index: 5;
+        font-weight: 600;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        /* 🔥 prevents wrapping */
+        height: 48px;
+    }
+
+    .permission-table thead th:first-child {
+        z-index: 15;
+    }
+
+    /* ================= ROLE COLUMNS ================= */
+    .permission-table th:not(:first-child),
+    .permission-table td:not(:first-child) {
+        text-align: center;
+        min-width: 140px;
+    }
+
+    /* ================= CHECKBOX ALIGNMENT (NO UI CHANGE) ================= */
+    .permission-table td:not(:first-child) {
+        padding: 0;
+    }
+
+    .permission-table .form-check {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .permission-table .form-check-label {
+        margin: 0;
+        line-height: 1;
+    }
+
+    /* keep material checkbox intact */
+    .permission-table .form-check-sign {
+        top: 0;
+    }
+
+    /* ================= TEXT ================= */
+    .permission-table td:first-child {
+        line-height: 1.5;
+    }
+
+    /* checkbox cell */
+    .permission-table td.checkbox-cell {
+        padding: 0;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    /* center the checkbox wrapper */
+    .permission-table td.checkbox-cell .form-check {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* reset Material absolute positioning */
+    .permission-table td.checkbox-cell .form-check-sign {
+        position: relative;
+        top: 0;
+        left: 0;
+    }
+    </style>
+
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header card-header-icon card-header-theme">
+                    <div class="card-icon">
+                        <i class="material-icons">perm_identity</i>
+                    </div>
+                    <h4 class="card-title ">{{ trans('panel.global.create') }} {{ trans('panel.role.title_singular') }}
+                        <span class="pull-right">
+                            <div class="btn-group">
+                                @if(auth()->user()->can(['role_access']))
+                                <a href="{{ url('roles') }}" class="btn btn-just-icon btn-theme"
+                                    title="{!! trans('panel.role.title_singular') !!}{!! trans('panel.global.list') !!}"><i
+                                        class="material-icons">next_plan</i></a>
+                                @endif
+                            </div>
+                        </span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if(count($errors) > 0)
+                    <div class="alert alert-danger">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <span>
+                            @foreach($errors->all() as $error)
+                            <li>{{$error}}</li>
+                            @endforeach
+                        </span>
+                    </div>
+                    @endif
+
+                    {{-- ================= CREATE ROLE FORM ================= --}}
+                    <form method="POST" action="{{ route('roles.store') }}" class="mb-4">
+                        @csrf
+
+                        <div class="row align-items-end">
+                            <div class="col-md-6">
+                                <label class="col-form-label">Role Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Enter role name"
+                                    required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary mt-4">
+                                    <i class="material-icons">add</i> Create Role
+                                </button>
+                            </div>
                         </div>
-                      </td>
-                    </tr>
-                    @endforeach
-                    @endforeach
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+                    </form>
+                    {{-- ================= END CREATE ROLE FORM ================= --}}
 
-          <div class="pull-right mt-3">
-            {{ Form::submit('Submit', array('class' => 'btn btn-theme')) }}
-          </div>
-        </form>
-      </div>
+                    {{-- ================= SAVE PERMISSIONS FORM ================= --}}
+                    <form method="POST" action="{{ route('roles.savePermissions') }}">
+                        @csrf
+
+                        <label class="col-form-label mt-3">
+                            Permissions
+                        </label>
+
+                        <div class="row mb-2 align-items-center">
+    <div class="col-6">
+        <input 
+            type="text" 
+            id="permissionSearch" 
+            class="form-control"
+            placeholder="Search permission..." 
+            onkeyup="filterPermissions()"
+        >
     </div>
-  </div>
+
+    <div class="col-6 d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-info btn-xs" onclick="selectAllPermissions()">
+            Select All
+        </button>
+        <button type="button" class="btn btn-info btn-xs" onclick="deselectAllPermissions()">
+            Deselect All
+        </button>
+    </div>
 </div>
 
-<style>
-.permission-matrix {
-  border-collapse: collapse;
-  width: 100%;
-}
 
-.permission-matrix th,
-.permission-matrix td {
-  border: 1px solid #ddd;
-  padding: 12px;
-}
 
-.permission-matrix thead th {
-  background: #f8f9fa;
-  font-weight: 600;
-  border-bottom: 2px solid #dee2e6;
-}
 
-.role-name-input {
-  text-align: center;
-  font-weight: 600;
-  border: none;
-  background: transparent;
-  pointer-events: none;
-}
+                        <div class="permission-container">
 
-.category-row td {
-  padding: 10px 12px;
-  user-select: none;
-}
 
-.category-icon {
-  transition: transform 0.3s;
-}
+                            <table class=" permission-table ">
+                                <thead>
+                                    <tr>
+                                        <th>Permission</th>
+                                        @foreach($roles as $role)
+                                        <th class="text-center">
+                                            {{
+        Str::of($role->name)
+            ->replace(['_', '-'], ' ')
+            ->snake()
+            ->replace('_', ' ')
+            ->title()
+    }}
+                                        </th>
 
-.category-icon.collapsed {
-  transform: rotate(-90deg);
-}
+                                        @endforeach
+                                    </tr>
+                                </thead>
 
-.permission-row {
-  transition: background-color 0.2s;
-}
+                                <tbody>
+                                    @foreach($permissions as $permission)
+                                    <tr>
+                                        <td>{{ $permission->name }}</td>
 
-.permission-row:hover {
-  background-color: #f8f9fa;
-}
+                                        @foreach($roles as $role)
+                                        <td class="checkbox-cell">
+                                            <div class="form-check">
+                                                <label class="form-check-label m-0">
+                                                    <input type="checkbox" class="form-check-input permission-checkbox"
+                                                        name="permissions[{{ $role->id }}][]"
+                                                        value="{{ $permission->id }}"
+                                                        {{ $role->permissions->contains($permission->id) ? 'checked' : '' }}>
+                                                    <span class="form-check-sign">
+                                                        <span class="check"></span>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </td>
 
-.custom-control-input:not(:checked) ~ .custom-control-label i {
-  color: #ccc !important;
-}
 
-.permission-checkbox {
-  display: none;
-}
 
-.permission-toggle {
-  cursor: pointer;
-}
+                                        @endforeach
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
 
-/* Search highlight */
-.highlight {
-  background-color: #fff3cd;
-}
-</style>
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-success">
+                                <i class="material-icons">save</i> Save Permissions
+                            </button>
+                        </div>
+                    </form>
+                    {{-- ================= END SAVE PERMISSIONS FORM ================= --}}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Sync role name input with display name
-  const displayNameInput = document.getElementById('display_name');
-  const roleNameDisplay = document.querySelector('.role-name-input');
-  
-  if (displayNameInput && roleNameDisplay) {
-    displayNameInput.addEventListener('input', function() {
-      roleNameDisplay.value = this.value || 'New Role';
-    });
-  }
 
-  // Permission toggle functionality
-  document.querySelectorAll('.permission-toggle').forEach(function(checkbox) {
-    checkbox.addEventListener('change', function() {
-      const permId = this.dataset.permissionId;
-      const hiddenCheckbox = document.querySelector(`input[name="permissions[]"][value="${permId}"]`);
-      if (hiddenCheckbox) {
-        hiddenCheckbox.checked = this.checked;
-      }
-    });
-  });
 
-  // Select/Deselect all
-  document.querySelector('.select-all-permissions').addEventListener('click', function() {
-    document.querySelectorAll('.permission-toggle, .permission-checkbox').forEach(cb => cb.checked = true);
-  });
+                </div>
 
-  document.querySelector('.deselect-all-permissions').addEventListener('click', function() {
-    document.querySelectorAll('.permission-toggle, .permission-checkbox').forEach(cb => cb.checked = false);
-  });
 
-  // Search functionality
-  document.getElementById('permissionSearch').addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
-    document.querySelectorAll('.permission-row').forEach(function(row) {
-      const permText = row.dataset.permission;
-      if (permText.includes(searchTerm) || searchTerm === '') {
-        row.style.display = '';
-        row.classList.toggle('highlight', searchTerm !== '' && permText.includes(searchTerm));
-      } else {
-        row.style.display = 'none';
-        row.classList.remove('highlight');
-      }
-    });
-  });
 
-  // Category toggle
-  window.toggleCategory = function(category) {
-    const rows = document.querySelectorAll(`.category-${category}`);
-    const icon = event.currentTarget.querySelector('.category-icon');
-    const isCollapsed = icon.classList.contains('collapsed');
-    
-    rows.forEach(row => {
-      row.style.display = isCollapsed ? '' : 'none';
-    });
-    
-    icon.classList.toggle('collapsed');
-  };
-});
-</script>
+            </div>
+        </div>
 
-<script src="{{ url('/').'/'.asset('assets/js/validation_users.js') }}"></script>
+    </div>
+    <!-- <div class="pull-right">
+                            {{ Form::submit('Submit', array('class' => 'btn btn-theme')) }}
+                        </div> -->
+    <!-- <div class="text-right mt-3">
+        <button type="submit" class="btn btn-primary">
+            <i class="material-icons">save</i>
+            Save Permissions
+        </button>
+    </div> -->
+
+    <!-- {{ Form::close() }} -->
+    </div>
+    </div>
+    </div>
+    </div>
+    <script src="{{ url('/').'/'.asset('assets/js/validation_users.js') }}"></script>
+
+    <script>
+    function selectAllPermissions() {
+        document.querySelectorAll('.permission-checkbox').forEach(cb => cb.checked = true);
+    }
+
+    function deselectAllPermissions() {
+        document.querySelectorAll('.permission-checkbox').forEach(cb => cb.checked = false);
+    }
+
+    function filterPermissions() {
+        const searchValue = document
+            .getElementById('permissionSearch')
+            .value
+            .toLowerCase();
+
+        const rows = document.querySelectorAll('.permission-table tbody tr');
+
+        rows.forEach(row => {
+            const permissionCell = row.querySelector('td:first-child');
+            const text = permissionCell.innerText.toLowerCase();
+
+            row.style.display = text.includes(searchValue) ? '' : 'none';
+        });
+    }
+    </script>
+
 </x-app-layout>

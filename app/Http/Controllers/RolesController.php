@@ -77,17 +77,31 @@ class RolesController extends Controller
         // {
         //     $permissions = Permission::whereIn('id',Auth::user()->getAllPermissions()->pluck('id'))->pluck('name', 'id');
         // }
-        $permissions = Permission::pluck('name', 'id');
-        return view('roles.create', compact('permissions'));
+                            // $permissions = Permission::pluck('name', 'id');
+                            // return view('roles.create', compact('permissions'));
+
+
+            $permissions = Permission::all();   // full permission objects
+    $roles = Role::with('permissions')->get(); // roles + permissions
+
+    return view('roles.create', compact('permissions', 'roles'));
+
     }
 
     public function store(Request $request)
-    {
-        $role = Role::create($request->all());
-        $role->permissions()->sync($request->input('permissions', []));
-        return redirect()->route('roles.index');
+{
+    $request->validate([
+        'name' => 'required|unique:roles,name'
+    ]);
 
-    }
+    Role::create([
+        'name' => $request->name,
+        'guard_name' => 'web'
+    ]);
+
+    return back()->with('success', 'Role created successfully');
+}
+
 
     public function edit(Role $role)
     {
@@ -167,4 +181,18 @@ class RolesController extends Controller
         ob_start();
         return Excel::download(new RoleTemplate, 'roles.xlsx');
     }
+    public function savePermissions(Request $request)
+{
+    // permissions[role_id] => [permission_ids]
+    foreach ($request->permissions as $roleId => $permissionIds) {
+        $role = Role::find($roleId);
+
+        if ($role) {
+            $role->permissions()->sync($permissionIds ?? []);
+        }
+    }
+
+    return redirect()->back()->with('success', 'Permissions updated successfully');
+}
+
 }

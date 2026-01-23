@@ -111,6 +111,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Controllers\MasterDistributorController;
 use App\Http\Controllers\SecondaryCustomerController;
+use App\Http\Controllers\RolesAndPermissionsController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -126,6 +127,11 @@ use App\Http\Controllers\SecondaryCustomerController;
 
 // ========================
 
+
+// use App\Http\Controllers\RolesAndPermissionsController;
+
+Route::post('roles/save-permissions', [RolesController::class, 'savePermissions'])
+    ->name('roles.savePermissions');
 
 
 
@@ -455,6 +461,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::any('permissions-download', [PermissionsController::class, 'download'])->name('permissions.download');
     Route::any('permissions-template', [PermissionsController::class, 'template'])->name('permissions.template');
     Route::post('permissions-upload', [PermissionsController::class, 'upload'])->name('permissions.upload');
+    
     //Category Route
     Route::resource('categories', CategoryController::class);
     Route::any('categories-download', [CategoryController::class, 'download'])->name('categories.download');
@@ -513,7 +520,9 @@ Route::group(['middleware' => ['auth']], function () {
     //Brand
     Route::resource('brands', BrandController::class);
     Route::any('brands-download', [BrandController::class, 'download'])->name('brands.download');
-    Route::any('brands-template', [BrandController::class, 'template'])->name('brands.template');
+    // Route::any('brands-template', [BrandController::class, 'template'])->name('brands.template');
+    Route::get('brands-template', [BrandController::class, 'downloadTemplate'])
+    ->name('brands.template.download');
     Route::post('brands-upload', [BrandController::class, 'upload'])->name('brands.upload');
     Route::post('brands-active', [BrandController::class, 'active'])->name('brands.active');
     //UnitMeasure
