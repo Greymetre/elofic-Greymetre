@@ -712,6 +712,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('master-distributors-export', [MasterDistributorController::class, 'export'])
      ->name('master-distributors.export')
      ->middleware(['auth']); 
+
+    Route::post('master-distributors/import', [MasterDistributorController::class, 'import'])
+    ->name('master-distributors.import');
 //     Route::get('/master-distributors/filter/states', [MasterDistributorController::class, 'getStates'])
 //      ->name('master-distributors.filter.states');
 

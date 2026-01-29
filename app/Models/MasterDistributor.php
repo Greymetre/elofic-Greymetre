@@ -46,6 +46,7 @@ class MasterDistributor extends Model
         'shipping_state',
         'shipping_country',
         'shipping_pincode',
+        'same_as_billing',
 
         /* ================= BUSINESS & OPERATION ================= */
         'sales_zone',
@@ -59,7 +60,7 @@ class MasterDistributor extends Model
         'pan_number',
         'registration_type',
         'documents',
-        
+        'mou_file',
 
         /* ================= BANKING ================= */
         'bank_name',
@@ -105,6 +106,7 @@ class MasterDistributor extends Model
     ];
     protected $casts = [
         'sales_executive_id' => 'array',
+        'same_as_billing' => 'boolean',
         
     ];
 

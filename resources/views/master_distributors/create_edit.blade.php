@@ -3,6 +3,21 @@
     /* ============== IMAGE PREVIEW STYLE FOR BOTH UPLOAD BOXES ============== */
     /* Default: Warning icon hide, badge gray */
 
+    #cancelled_cheque {
+    pointer-events: none;  /* Yeh add kar do */
+}
+    .clickable-upload-text {
+    color: #007bff;                /* blue color jaise link dikhe */
+    cursor: pointer;
+    text-decoration: underline;    /* underline daal do taaki clear lage clickable */
+    font-weight: 500;
+}
+
+.clickable-upload-text:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
 
 .documents-preview {
     display: flex;
@@ -752,10 +767,21 @@
 
                                 {{-- Same as Billing Checkbox --}}
                                 <div class="mt-4">
-                                    <input type="checkbox" name="same_as_billing" id="same_as_billing"
-                                        {{ old('same_as_billing', 1) == 1 ? 'checked' : '' }}>
-                                    <span class="text-theme2 font-weight-bold">Same as Billing Address</span>
-                                </div>
+<div class="mt-4">
+    <div class="form-check">
+        <input type="checkbox" 
+               name="same_as_billing" 
+               id="same_as_billing" 
+               value="1"
+             
+               {{ old('same_as_billing') !== null 
+                   ? (old('same_as_billing') ? 'checked' : '') 
+                   : ($distributor->same_as_billing ? 'checked' : '') }}>
+        <label class="form-check-label text-theme2 font-weight-bold" for="same_as_billing">
+            Same as Billing Address
+        </label>
+    </div>
+</div>
 
                                 {{-- ==================== SHIPPING ADDRESS ==================== --}}
                                 <div class="card mt-4 shipping-fields" id="shipping-panel">
@@ -1175,23 +1201,29 @@
 
                                             <!-- In your form – around the documents field -->
 
-<div class="form-group">
-    <label for="documents">Upload Additional Documents (multiple allowed)</label>
-    
-    <div class="custom-file-upload">
-        <input type="file" 
-               name="documents[]" 
-               id="documents" 
-               class="form-control-file" 
-               multiple 
-               accept="image/*,.pdf">
-        
-        <small class="form-text text-muted">Allowed: jpg, jpeg, png, pdf (max 5MB each)</small>
-    </div>
+                                            <div class="form-group">
+                                                <label for="documents">Upload Additional Documents (multiple allowed)</label>
+                                                
+                                                <div class="custom-file-upload" style="border: 2px dashed #ccc; padding: 5px; text-align: center; margin-top: 5px; border-radius: 5px">
+                                                    <input type="file" 
+                                                        name="documents[]" 
+                                                        id="documents" 
+                                                        multiple 
+                                                        accept="image/*,.pdf" 
+                                                        style="display: none;">
 
-    <!-- Preview container -->
-    <div id="documents-preview" class="documents-preview mt-3 row"></div>
-</div>
+                                                    <div class="upload-instruction">
+                                                        <!-- <p>Click the line below to select files</p> -->
+                                                        <small class="form-text text-muted" 
+                                                            id="trigger-upload" 
+                                                            style="cursor: pointer; color: #007bff; text-decoration: underline;">
+                                                            Allowed: jpg, jpeg, png, pdf | Max 5 files | Total size ≤ 5MB
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                
+                                            </div>
 
                                             <!-- Existing Documents -->
                                             @if($distributor->exists && $distributor->documents)
@@ -1215,6 +1247,59 @@
                                             @enderror
                                         </div>
                                     </div>
+
+                            <div class="col-md-6">
+                               <div class="input_section">
+                                    <div class="form-group">
+                                        <label for="mou_file">Upload MOU (Memorandum of Understanding)</label>
+    
+                                             <div class="custom-file-upload" 
+                                             >
+                                                <input type="file" 
+                                                    name="mou_file" 
+                                                    id="mou_file" 
+                                                    accept=".pdf,.jpg,.jpeg,.png" 
+                                                    style="display: none;">
+
+                                                <div class="upload-instruction">
+                                                    <!-- <p>Click below to upload MOU (single file only)</p> -->
+                                                    <small class="form-text text-muted" 
+                                                        id="trigger-mou-upload" 
+                                             style="border: 2px dashed #ccc; padding: 5px; text-align: center; border-radius: 5px;">
+                                                        Allowed: PDF, JPG, JPEG, PNG | Max size 5MB | Single file only
+                                                    </small>
+                                                </div>
+
+                                        <!-- Preview area -->
+                                        <div id="mou-preview" class="mt-3" style="min-height: 120px;"></div>
+                                    </div>
+
+                                    <!-- Existing MOU (edit mode ke liye) -->
+                                    @if($distributor->exists && $distributor->mou_file)
+                                    <div class="mt-2">
+                                        <p class="text-muted">Current MOU:</p>
+                                        <a href="{{ asset('storage/' . $distributor->mou_file) }}" target="_blank" class="btn btn-sm btn-info">
+                                            <i class="material-icons">visibility</i> View Current MOU
+                                        </a>
+                                    </div>
+                                    @endif
+
+                                    @error('mou_file')
+                                    <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                                        
+                                                            
+                            <div id="documents-preview" class="documents-preview mt-3 ml-1 row"></div>
+                                                                
+
+                            </div>
+
+
                                 </div>
 
                             </div>
@@ -1311,13 +1396,17 @@
                                     </div>
 
                                     {{-- Credit Days --}}
-                                    <div class="col-md-6 mb-3">
-                                        <label class="col-form-label">
-                                            Credit Days <span class="text-danger">*</span>
-                                        </label>
-                                        {!! Form::number('credit_days', null, ['class'=>'form-control mandatory-field'])
-                                        !!}
-                                    </div>
+                                   <div class="col-md-6 mb-3">
+    <label class="col-form-label">
+        Credit Limit Assigned (Days) <span class="text-danger">*</span>
+    </label>
+    {!! Form::number('credit_limit', old('credit_limit', 7), [
+        'class'          => 'form-control mandatory-field',
+        'min'            => '0',     // optional but recommended
+        'step'           => '1',     // optional – whole numbers only
+        'placeholder'    => '7',     // optional visual hint (shows when empty)
+    ]) !!}
+</div>
 
                                     {{-- Average Monthly Purchase --}}
                                     <div class="col-md-6 mb-3">
@@ -1353,61 +1442,42 @@
 
                                     {{-- Cancelled Cheque --}}
                                     <div class="col-md-6">
-                                        <div class="input_section">
-                                            <label class="col-form-label">Image of Cancelled Cheque <span
-                                                    class="text-danger">*</span></label>
+    <div class="input_section">
+        <label class="col-form-label">
+            Image of Cancelled Cheque <span class="text-danger">*</span>
+        </label>
 
-                                            <!-- Custom Upload Box for Cancelled Cheque -->
-                                            <!-- <div class="custom-file-upload-box" id="cheque-upload-box">
-                                                <input type="file" name="cancelled_cheque" id="cancelled_cheque"
-                                                    accept=".jpg,.jpeg,.png,.pdf" style="display: none;"
-                                                    class="mandatory-field">
+        <div class="custom-preview-container" id="cheque-upload-box">
+            <input type="file" 
+                   name="cancelled_cheque" 
+                   id="cancelled_cheque" 
+                   accept=".jpg,.jpeg,.png,.pdf"
+                   class="mandatory-field">
 
-                                                <div class="upload-placeholder text-center">
-                                                    <i class="material-icons mb-3"
-                                                        style="font-size: 60px; color: gray;">cloud_upload</i>
-                                                    <p class="font-weight-bold mb-1" style="color: gray;">Click here to
-                                                        upload cancelled cheque</p>
-                                                    <p class="text-sm" style="color: gray;">JPG, JPEG, PNG, PDF</p>
-                                                </div> -->
+            <div class="custom-placeholder" id="cheque-placeholder">
+                <i class="material-icons">cloud_upload</i>
+                <strong>Click here to upload Cancelled Cheque</strong>
+                <span>JPG, PNG, PDF • Max 5MB</span>
+            </div>
 
-                                            <!-- Selected File Name Display -->
-                                            <!-- <div id="cheque-selected-files" class="selected-files-list mt-1 px-3">
-                                                </div>
-                                            </div> -->
+            <div id="cheque-preview-area" class="mt-2 text-center"></div>
+        </div>
 
+        <!-- Existing file (edit mode) -->
+        @if($distributor->exists && $distributor->cancelled_cheque)
+        <div class="mt-3 p-3 bg-light border rounded">
+            <p class="font-weight-bold text-primary mb-2">Current File:</p>
+            <a href="{{ asset('storage/' . $distributor->cancelled_cheque) }}" target="_blank" class="btn btn-sm btn-info">
+                <i class="material-icons">visibility</i> View Current Cheque
+            </a>
+        </div>
+        @endif
 
-                                            <div class="custom-preview-container" id="cheque-upload-box">
-                                                <input type="file" name="cancelled_cheque" id="cancelled_cheque"
-                                                    accept=".jpg,.jpeg,.png,.pdf">
-                                                <div class="custom-placeholder">
-                                                    <i class="material-icons">cloud_upload</i>
-                                                    <strong>Upload Cancelled Cheque</strong>
-                                                    <span>JPG, PNG, PDF</span>
-                                                </div>
-                                                <img id="cheque-preview-img" class="custom-preview-img">
-                                                <div id="cheque-selected-display" class="custom-files-list"></div>
-                                            </div>
-
-                                            <!-- Existing Cancelled Cheque (Edit Mode) -->
-                                            @if($distributor->exists && $distributor->cancelled_cheque)
-                                            <div class="mt-3 p-4 bg-light border rounded">
-                                                <p class="font-weight-bold text-primary mb-3">Existing Cancelled Cheque:
-                                                </p>
-                                                <a href="{{ asset('storage/' . $distributor->cancelled_cheque) }}"
-                                                    target="_blank" class="btn btn-sm btn-info">
-                                                    <i class="material-icons" style="font-size: 16px;">visibility</i>
-                                                    View Current Cheque
-                                                </a>
-                                            </div>
-                                            @endif
-
-                                            @error('cancelled_cheque')
-                                            <p class="text-danger mt-3">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    </div>
-
+        @error('cancelled_cheque')
+        <small class="text-danger d-block mt-2">{{ $message }}</small>
+        @enderror
+    </div>
+</div>
 
 
 
@@ -1782,82 +1852,111 @@
         </div>
 
         <script>
-        const fileInput = document.getElementById('documents');
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const fileInput = document.getElementById('documents');
     const previewContainer = document.getElementById('documents-preview');
 
-    if (!fileInput || !previewContainer) {
-        console.warn("Documents input or preview container not found");
-        return;
-    }
+    if (!fileInput || !previewContainer) return;
 
-    const MAX_FILES = 5;     // tum badal sakte ho
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_FILES = 5;
+    const MAX_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
-    function createPreviewItem(file, dataUrl, index) {
-        const item = document.createElement('div');
-        item.className = 'preview-item col-6 col-md-3 mb-3';
-        item.dataset.index = index;
+    let allFiles = [];  // saari files yahan store honge
 
-        let content = '';
-        if (file.type.startsWith('image/')) {
-            content = `<img src="${dataUrl}" alt="Preview" style="width:100%; height:140px; object-fit:cover;">`;
-        } else {
-            content = `
-                <div class="pdf-placeholder d-flex align-items-center justify-content-center" style="height:140px; background:#f0f0f0;">
-                    <div class="text-center">
-                        <i class="material-icons" style="font-size:48px;">picture_as_pdf</i><br>
-                        <small>${file.name.substring(0,18)}${file.name.length > 18 ? '...' : ''}</small>
-                    </div>
-                </div>`;
-        }
+    function renderPreviews() {
+        previewContainer.innerHTML = '';
 
-        item.innerHTML = `
-            ${content}
-            <button type="button" class="remove-btn" data-index="${index}">×</button>
-            <div class="file-name text-center small mt-1">${file.name}</div>
-        `;
-
-        return item;
-    }
-
-    function updatePreviews() {
-        previewContainer.innerHTML = ''; // clear pehle
-
-        Array.from(fileInput.files).forEach((file, index) => {
-            if (file.size > MAX_SIZE) {
-                alert(`File "${file.name}" bahut bada hai (max 5MB)`);
-                return;
-            }
-
+        allFiles.forEach((file, index) => {
             const reader = new FileReader();
-            reader.onload = function (e) {
-                const preview = createPreviewItem(file, e.target.result, index);
-                previewContainer.appendChild(preview);
+            reader.onload = function(e) {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.dataset.index = index;
+
+                let content = '';
+                if (file.type.startsWith('image/')) {
+                    content = `<img src="${e.target.result}" alt="Preview">`;
+                } else {
+                    content = `
+                        <div class="pdf-placeholder">
+                            PDF<br><small>${file.name.slice(0,15)}${file.name.length > 15 ? '...' : ''}</small>
+                        </div>
+                    `;
+                }
+
+                item.innerHTML = `
+                    ${content}
+                    <button type="button" class="remove-btn" data-index="${index}">×</button>
+                    <div class="file-name">${file.name}</div>
+                `;
+
+                previewContainer.appendChild(item);
             };
             reader.readAsDataURL(file);
         });
     }
 
-    // Naye files select hone par
-    fileInput.addEventListener('change', function () {
-        if (this.files.length > MAX_FILES) {
-            alert(`Maximum ${MAX_FILES} files allowed`);
-            this.value = ''; // clear invalid selection
+    function showError(message) {
+        alert(message);
+        // ya better UX ke liye: ek red message div bana sakte ho
+    }
+
+    function checkLimits(newFiles) {
+        // 1. File count check
+        if (allFiles.length + newFiles.length > MAX_FILES) {
+            showError(`Maximum ${MAX_FILES} files allowed. You already have ${allFiles.length} file(s).`);
+            return false;
+        }
+
+        // 2. Total size check
+        let currentTotalSize = allFiles.reduce((sum, f) => sum + f.size, 0);
+        let newFilesSize = newFiles.reduce((sum, f) => sum + f.size, 0);
+        let wouldBeTotal = currentTotalSize + newFilesSize;
+
+        if (wouldBeTotal > MAX_TOTAL_SIZE_BYTES) {
+            showError(`Total size would exceed 5MB limit.\nCurrent: ${(currentTotalSize / 1024 / 1024).toFixed(2)}MB\nNew files: ${(newFilesSize / 1024 / 1024).toFixed(2)}MB`);
+            return false;
+        }
+
+        return true;
+    }
+
+    fileInput.addEventListener('change', function(e) {
+        const newFiles = Array.from(e.target.files || []);
+
+        if (newFiles.length === 0) return;
+
+        // Limits check
+        if (!checkLimits(newFiles)) {
+            e.target.value = ''; // selection clear kar do
             return;
         }
-        updatePreviews();
+
+        // Add new files to collection
+        allFiles = [...allFiles, ...newFiles];
+
+        // Update actual <input> files (form submit ke liye zaroori)
+        const dt = new DataTransfer();
+        allFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+
+        // Previews refresh
+        renderPreviews();
     });
 
-    // Remove karne ka logic
-    previewContainer.addEventListener('click', function (e) {
+    // Remove file on click
+    previewContainer.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-btn')) {
             const index = parseInt(e.target.dataset.index);
+            allFiles.splice(index, 1);
+
+            // Update input files
             const dt = new DataTransfer();
-            Array.from(fileInput.files).forEach((file, i) => {
-                if (i !== index) dt.items.add(file);
-            });
+            allFiles.forEach(file => dt.items.add(file));
             fileInput.files = dt.files;
-            updatePreviews(); // refresh
+
+            renderPreviews();
         }
     });
 
@@ -1868,100 +1967,11 @@
         // -----------------------------
 
             // Prevent multiple attachments
-            const handledBoxes = new Set();
-
-            function setupFileUpload(boxId, inputId, displayId, isMultiple = false, accordionId = null) {
-                const box = document.getElementById(boxId);
-                const input = document.getElementById(inputId);
-                const display = document.getElementById(displayId);
-                const placeholder = box?.querySelector('.custom-placeholder');
-
-                if (!box || !input || !display || !placeholder || handledBoxes.has(boxId)) return;
-                handledBoxes.add(boxId);
-
-                // SIRF PLACEHOLDER PAR CLICK KARNE SE FILE PICKER KHULE
-                placeholder.addEventListener('click', () => {
-                    input.click();
-                });
-
-                // Preview area (display) par click se kuch na ho (file picker na khule)
-                display.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Box ke click event tak na pahunche
-                });
-
-                // File change handler
-                input.addEventListener('change', function() {
-                    const files = this.files;
-                    if (files.length === 0) return;
-
-                    placeholder.style.display = 'none';
-                    display.innerHTML = '';
-
-                    const filesToShow = isMultiple ? Array.from(files) : [files[0]];
-
-                    filesToShow.forEach(file => {
-                        const div = document.createElement('div');
-
-                        if (file.type.startsWith('image/')) {
-                            const img = document.createElement('img');
-                            img.src = URL.createObjectURL(file);
-                            img.alt = file.name;
-                            div.appendChild(img);
-                        } else {
-                            const icon = document.createElement('i');
-                            icon.className = 'material-icons';
-                            icon.textContent = file.type === 'application/pdf' ?
-                                'picture_as_pdf' : 'insert_drive_file';
-                            icon.style.fontSize = '48px';
-                            icon.style.color = file.type === 'application/pdf' ? '#e74c3c' :
-                                '#95a5a6';
-                            div.appendChild(icon);
-                        }
-
-                        const info = document.createElement('div');
-                        const sizeKB = (file.size / 1024).toFixed(1);
-                        info.innerHTML = `
-                    <strong style="word-break: break-all; color:#666;">${file.name}</strong><br>
-                    <span style="color:#666; font-size:12px;">${sizeKB} KB</span>
-                `;
-                        div.appendChild(info);
-
-                        display.appendChild(div);
-                    });
-
-                    if (accordionId) {
-                        const toggle = document.getElementById(accordionId);
-                        if (toggle) toggle.checked = true;
-                    }
-                });
-
-                // Drag & Drop (sirf box par)
-                ['dragenter', 'dragover'].forEach(evt => {
-                    box.addEventListener(evt, (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        box.classList.add('dragover');
-                    });
-                });
-
-                ['dragleave', 'drop'].forEach(evt => {
-                    box.addEventListener(evt, (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        box.classList.remove('dragover');
-                    });
-                });
-
-                box.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const dt = e.dataTransfer;
-                    if (dt.files && dt.files.length) {
-                        input.files = dt.files;
-                        input.dispatchEvent(new Event('change'));
-                    }
-                });
-            }
+            
+            document.getElementById('trigger-upload').addEventListener('click', function(e) {
+    e.preventDefault();           // unnecessary propagation rokne ke liye
+    document.getElementById('documents').click();
+});
 
             // ===================== KYC DOCUMENTS UPLOAD (Multiple Files) =====================
             // ===== KYC DOCUMENTS UPLOAD (Multiple Files with Preview) =====
@@ -2025,80 +2035,176 @@
             //     });
             // }
 
-            // ===== CANCELLED CHEQUE UPLOAD (Single File with Preview) =====
-            const chequeBox = document.getElementById('cheque-upload-box');
-            const chequeInput = document.getElementById('cancelled_cheque');
-            const chequeImg = document.getElementById('cheque-preview-img');
-            const chequeName = document.getElementById('cheque-file-name');
-            const chequePlaceholder = chequeBox.querySelector('.custom-placeholder');
+// -----------------------------------
 
-            if (chequeBox && chequeInput && chequeImg && chequeName && chequePlaceholder) {
-                // Click on box to open file picker
-                chequeBox.addEventListener('click', function(e) {
-                    if (!e.target.closest('.custom-preview-img') && !e.target.closest(
-                            '.custom-file-name')) {
-                        chequeInput.click();
-                    }
-                });
 
-                chequeInput.addEventListener('change', function() {
-                    const file = this.files[0];
-                    if (!file) return;
+const mouInput     = document.getElementById('mou_file');
+    const mouPreview   = document.getElementById('mou-preview');
+    const mouTrigger   = document.getElementById('trigger-mou-upload');
 
-                    // Show file name
-                    chequeName.textContent = file.name;
-                    chequeName.style.display = 'block';
+    if (!mouInput || !mouPreview || !mouTrigger) return;
 
-                    // Hide placeholder
-                    chequePlaceholder.style.display = 'none';
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
-                    // Show image preview if it's an image
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            chequeImg.src = e.target.result;
-                            chequeImg.style.display = 'block';
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        // For PDF - just show name, no image
-                        chequeImg.style.display = 'none';
-                    }
+    // Click on instruction text → open file picker
+    mouTrigger.addEventListener('click', () => {
+        mouInput.click();
+    });
 
-                    // Auto open Banking accordion
-                    document.getElementById('bankInfo').checked = true;
+    mouInput.addEventListener('change', function(e) {
+        const file = this.files[0];
+        if (!file) return;
 
-                    // Update counters
-                    if (typeof updateAllCounters === 'function') updateAllCounters();
-                });
+        // Size check
+        if (file.size > MAX_SIZE_BYTES) {
+            alert(`File size exceeds 5MB limit.\nSelected file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+            this.value = ''; // clear input
+            mouPreview.innerHTML = '';
+            return;
+        }
+
+        // Clear previous preview
+        mouPreview.innerHTML = '';
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            let content = '';
+
+            if (file.type.startsWith('image/')) {
+                content = `<img src="${event.target.result}" alt="MOU Preview" style="max-width:100%; max-height:200px; object-fit:contain; border:1px solid #ddd; border-radius:6px;">`;
+            } else {
+                // PDF or others
+                content = `
+                    <div class="pdf-placeholder" style="width:140px; height:180px; margin:0 auto; background:#f8f9fa; border:1px solid #ddd; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                        <i class="material-icons" style="font-size:60px; color:#e74c3c;">picture_as_pdf</i>
+                        <small style="margin-top:8px; text-align:center;">${file.name.slice(0,20)}${file.name.length > 20 ? '...' : ''}</small>
+                    </div>
+                `;
             }
 
-            // Drag & Drop support (optional but nice)
-            [kycBox, chequeBox].forEach(box => {
-                if (!box) return;
-                ['dragenter', 'dragover'].forEach(event => {
-                    box.addEventListener(event, () => box.classList.add('dragover'));
-                });
-                ['dragleave', 'drop'].forEach(event => {
-                    box.addEventListener(event, () => box.classList.remove('dragover'));
-                });
-                box.addEventListener('drop', e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const input = box.querySelector('input[type="file"]');
-                    if (input) {
-                        input.files = e.dataTransfer.files;
-                        input.dispatchEvent(new Event('change'));
-                    }
-                });
-            });
+            const item = document.createElement('div');
+            item.style.position = 'relative';
+            item.style.display = 'inline-block';
+
+            item.innerHTML = `
+                ${content}
+                <button type="button" class="remove-btn" style="position:absolute; top:-8px; right:-8px; width:24px; height:24px; background:#dc3545; color:white; border:none; border-radius:50%; cursor:pointer; font-size:14px; line-height:1; box-shadow:0 2px 4px rgba(0,0,0,0.2);">×</button>
+                <div class="file-name" style="font-size:0.8rem; text-align:center; margin-top:4px; color:#555; word-break:break-all;">${file.name}</div>
+            `;
+
+            mouPreview.appendChild(item);
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+    // Remove button click
+    mouPreview.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-btn')) {
+            mouInput.value = '';           // clear input
+            mouPreview.innerHTML = '';     // remove preview
+        }
+    });
+
+
+// -----------------------------------
+
+
+// ── Cancelled Cheque Upload Logic ───────────────────────────────────────
+   // ============================================================================
+// CANCELLED CHEQUE UPLOAD – ISOLATED SCRIPT (double open fix)
+// ============================================================================
+(function() {
+    if (window.cancelledChequeScriptInitialized) return;
+    window.cancelledChequeScriptInitialized = true;
+
+    const box         = document.getElementById('cheque-upload-box');
+    const input       = document.getElementById('cancelled_cheque');
+    const placeholder = document.getElementById('cheque-placeholder');
+    const previewArea = document.getElementById('cheque-preview-area');
+
+    if (!box || !input || !placeholder || !previewArea) return;
+
+    function triggerFileInput() {
+        input.click();
+    }
+
+    placeholder.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // triggerFileInput();
+    });
+
+    box.addEventListener('click', function(e) {
+        if (e.target.closest('#cheque-preview-area') || e.target.classList.contains('remove-btn')) {
+            return;
+        }
+        triggerFileInput();
+    });
+
+    input.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("File size zyada hai (max 5MB allowed)");
+            this.value = '';
+            return;
+        }
+
+        previewArea.innerHTML = '';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+        wrapper.style.maxWidth = '220px';
+
+        let contentHTML = '';
+        if (file.type.startsWith('image/')) {
+            contentHTML = `<img src="${URL.createObjectURL(file)}" alt="${file.name}" style="max-width:100%; max-height:180px; object-fit:contain; border:1px solid #ccc; border-radius:6px;">`;
+        } else {
+            contentHTML = `
+                <div style="width:140px; height:160px; margin:0 auto; background:#f8f9fa; border:1px solid #ddd; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <i class="material-icons" style="font-size:64px; color:#e74c3c;">picture_as_pdf</i>
+                    <small style="margin-top:10px; color:#555; text-align:center;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</small>
+                </div>
+            `;
+        }
+
+        wrapper.innerHTML = `
+            ${contentHTML}
+            <button type="button" class="remove-btn" style="position:absolute; top:-12px; right:-12px; width:28px; height:28px; background:#dc3545; color:white; border:none; border-radius:50%; font-size:18px; line-height:1; cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,0.25);">×</button>
+            <div style="font-size:0.9rem; margin-top:8px; color:#444; word-break:break-all;">${file.name}</div>
+        `;
+
+        previewArea.appendChild(wrapper);
+        placeholder.style.display = 'none';
+
+        const toggle = document.getElementById('bankInfo');
+        if (toggle) toggle.checked = true;
+    });
+
+    previewArea.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-btn')) {
+            input.value = '';
+            previewArea.innerHTML = '';
+            placeholder.style.display = 'flex';
+        }
+    });
+
+    console.log("Cancelled Cheque upload initialized (single instance)");
+})();
 
 
 
-            // setupFileUpload('upload-box', 'documents', 'selected-files-display', true, 'kycInfo');
-            setupFileUpload('cheque-upload-box', 'cancelled_cheque', 'cheque-selected-display', false,
-                'bankInfo');
+ 
 
+
+
+           
+
+
+            
 
         });
         </script>

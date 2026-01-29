@@ -16,6 +16,7 @@ use DataTables;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MasterDistributorsExport;
 use App\Exports\MasterDistributorsTemplateExport;
+use App\Imports\MasterDistributorsImport;
 
 
 class MasterDistributorController extends Controller
@@ -202,7 +203,7 @@ if ($request->filled('billing_city')) {
 {
     $rules = [
         // Basic Info
-        'legal_name'         => 'required|string|max:255',
+        // 'legal_name'         => 'required|string|max:255',
         'distributor_code'   => 'required|string|max:100|unique:master_distributors,distributor_code',
         'category'           => 'required',
         'business_status'    => 'required|in:Active,Inactive,On Hold',
@@ -225,6 +226,7 @@ if ($request->filled('billing_city')) {
         'gst_number'         => 'required|regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/',
         'pan_number'         => 'required|regex:/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/',
         'registration_type'  => 'required',
+        
 
         // Banking
         'bank_name'          => 'required|string',
@@ -264,6 +266,7 @@ if ($request->filled('billing_city')) {
         'profile_image'          => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
         'cancelled_cheque'       => 'required|mimes:pdf,jpeg,png,jpg|max:5120',
         'documents.*'            => 'nullable|mimes:pdf,jpeg,png,jpg|max:5120',
+        'mou_file'               => 'required|mimes:pdf,jpeg,png,jpg|max:5120',
     ];
 
     // Agar same_as_billing checked nahi hai to shipping fields required
@@ -286,14 +289,23 @@ if ($request->filled('billing_city')) {
     $data['beat_route'] = $request->beat_route;
 
     // Handle same as billing
-    if ($request->has('same_as_billing') && $request->same_as_billing == 1) {
-        $data['shipping_address']   = $data['billing_address'] ?? null;
-        $data['shipping_city']      = $data['billing_city'] ?? null;
-        $data['shipping_district']  = $data['billing_district'] ?? null;
-        $data['shipping_state']     = $data['billing_state'] ?? null;
-        $data['shipping_country']   = $data['billing_country'] ?? null;
-        $data['shipping_pincode']   = $data['billing_pincode'] ?? null;
-    }
+$data['same_as_billing'] = $request->boolean('same_as_billing');  // true/false
+
+if ($data['same_as_billing']) {
+    $data['shipping_address']     = $data['billing_address'] ?? null;
+    $data['shipping_city']        = $data['billing_city'] ?? null;
+    $data['shipping_district']    = $data['billing_district'] ?? null;
+    $data['shipping_state']       = $data['billing_state'] ?? null;
+    $data['shipping_country']     = $data['billing_country'] ?? null;
+    $data['shipping_pincode']     = $data['billing_pincode'] ?? null;
+
+    // Also copy IDs if you're using them
+    $data['shipping_country_id']  = $request->country_id;
+    $data['shipping_state_id']    = $request->state_id;
+    $data['shipping_district_id'] = $request->district_id;
+    $data['shipping_city_id']     = $request->city_id;
+    $data['shipping_pincode_id']  = $request->pincode_id;
+}
 
     // File uploads
     if ($request->hasFile('shop_image')) {
@@ -307,6 +319,10 @@ if ($request->filled('billing_city')) {
     if ($request->hasFile('cancelled_cheque')) {
         $data['cancelled_cheque'] = $request->file('cancelled_cheque')->store('distributors/cheques', 'public');
     }
+
+    if ($request->hasFile('mou_file')) {
+    $data['mou_file'] = $request->file('mou_file')->store('distributors/mou', 'public');
+}
 
     if ($request->has('sales_executive_id') && is_array($request->sales_executive_id)) {
     $data['sales_executive_id'] = json_encode(array_filter($request->sales_executive_id));
@@ -392,38 +408,86 @@ if ($request->filled('billing_city')) {
 
     $data['beat_route'] = $request->beat_route;
 
-    if ($request->has('same_as_billing') && $request->same_as_billing == 1) {
-        $data['shipping_country_id'] = $request->country_id;
-        $data['shipping_state_id'] = $request->state_id;
-        $data['shipping_district_id'] = $request->district_id;
-        $data['shipping_city_id'] = $request->city_id;
-        $data['shipping_pincode_id'] = $request->pincode_id;
-    }
+$data['same_as_billing'] = $request->boolean('same_as_billing');  // true/false
+
+if ($data['same_as_billing']) {
+    $data['shipping_address']     = $data['billing_address'] ?? null;
+    $data['shipping_city']        = $data['billing_city'] ?? null;
+    $data['shipping_district']    = $data['billing_district'] ?? null;
+    $data['shipping_state']       = $data['billing_state'] ?? null;
+    $data['shipping_country']     = $data['billing_country'] ?? null;
+    $data['shipping_pincode']     = $data['billing_pincode'] ?? null;
+
+    // Also copy IDs if you're using them
+    $data['shipping_country_id']  = $request->country_id;
+    $data['shipping_state_id']    = $request->state_id;
+    $data['shipping_district_id'] = $request->district_id;
+    $data['shipping_city_id']     = $request->city_id;
+    $data['shipping_pincode_id']  = $request->pincode_id;
+}
 
     DB::beginTransaction();
-    try {
-        // File handling
-        foreach (['shop_image', 'profile_image', 'documents', 'cancelled_cheque'] as $file) {
-            if ($request->hasFile($file)) {
-                if ($distributor->$file) {
-                    Storage::delete($distributor->$file);
-                }
-                // Agar validated mein file hai to use karo, warna request se
-                $data[$file] = $this->uploadFile($request, $file);
+try {
+    // ───────────────────────────────────────────────
+    // SINGLE FILE FIELDS (shop, profile, cheque, mou)
+    // ───────────────────────────────────────────────
+    $singleFileFields = [
+        'shop_image'       => 'distributors/shop_images',
+        'profile_image'    => 'distributors/profile_images',
+        'cancelled_cheque' => 'distributors/cheques',
+        'mou_file'         => 'distributors/mou',
+    ];
+
+    foreach ($singleFileFields as $field => $folder) {
+        if ($request->hasFile($field)) {
+            // Delete old file if exists
+            if ($distributor->$field) {
+                Storage::disk('public')->delete($distributor->$field);
+            }
+
+            // Upload new file to correct folder
+            $data[$field] = $request->file($field)->store($folder, 'public');
+        }
+    }
+
+    // ───────────────────────────────────────────────
+    // MULTIPLE FILES → documents
+    // ───────────────────────────────────────────────
+    if ($request->hasFile('documents')) {
+        // Optional: purane documents delete karna chahte ho to yeh uncomment kar do
+        /*
+        if ($distributor->documents) {
+            $oldPaths = json_decode($distributor->documents, true) ?? [];
+            foreach ($oldPaths as $oldPath) {
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
+        */
+
+        $paths = [];
+        foreach ($request->file('documents') as $file) {
+            if ($file->isValid()) {
+                $paths[] = $file->store('distributors/documents', 'public');
             }
         }
 
-        // YE LINE CHANGE KARO — $data pass karo, $validated nahi
-        $distributor->update($data);
-
-        DB::commit();
-        return redirect()
-            ->route('master-distributors.index')
-            ->with('success', 'Master Distributor updated successfully');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->withErrors($e->getMessage())->withInput();
+        $data['documents'] = !empty($paths) ? json_encode($paths) : null;
     }
+
+    // ───────────────────────────────────────────────
+    // Final update
+    // ───────────────────────────────────────────────
+    $distributor->update($data);
+
+    DB::commit();
+
+    return redirect()
+        ->route('master-distributors.index')
+        ->with('success', 'Master Distributor updated successfully');
+} catch (\Exception $e) {
+    DB::rollBack();
+    return back()->withErrors($e->getMessage())->withInput();
+}
 }
 
     /* ================= SHOW ================= */
@@ -439,7 +503,7 @@ if ($request->filled('billing_city')) {
     $distributor = MasterDistributor::findOrFail($id);
 
     // Delete associated files
-    foreach (['shop_image', 'profile_image', 'cancelled_cheque'] as $file) {
+    foreach (['shop_image', 'profile_image', 'cancelled_cheque','mou_file'] as $file) {
         if ($distributor->$file) {
             Storage::delete($distributor->$file);
         }
@@ -474,28 +538,38 @@ if ($request->filled('billing_city')) {
     }
 
     /* ================= FILE UPLOADER ================= */
-    private function uploadFile(Request $request, $field)
-    {
-        if ($request->hasFile($field)) {
-            $uploadedFiles = $request->file($field);
-
-            // If it's multiple files (array)
-            if (is_array($uploadedFiles)) {
-                $paths = [];
-                foreach ($uploadedFiles as $file) {
-                    if ($file->isValid()) {
-                        $paths[] = $file->store('master_distributors');
-                    }
-                }
-                return json_encode($paths); // Store as JSON array in DB
-            }
-
-            // Single file
-            return $uploadedFiles->store('master_distributors');
-        }
-
+private function uploadFile(Request $request, $field)
+{
+    if (!$request->hasFile($field)) {
         return null;
     }
+
+    $file = $request->file($field);
+
+    // Handle multiple files (like documents)
+    if (is_array($file)) {
+        $paths = [];
+        foreach ($file as $singleFile) {
+            if ($singleFile->isValid()) {
+                $paths[] = $singleFile->store('distributors/documents', 'public');
+            }
+        }
+        return $paths ? json_encode($paths) : null;
+    }
+
+    // Single file
+    // You can make path dynamic per field if you want
+    $path = match ($field) {
+        'shop_image'       => 'distributors/shop_images',
+        'profile_image'    => 'distributors/profile_images',
+        'cancelled_cheque' => 'distributors/cheques',
+        'mou_file'         => 'distributors/mou',
+        'documents'        => 'distributors/documents',
+        default            => 'distributors/others',
+    };
+
+    return $file->store($path, 'public');
+}
 
     public function export(Request $request)
 {
@@ -639,5 +713,43 @@ public function getCitiesForState($state_id)
         ->pluck('city_name');
 
     return response()->json($cities);
+}
+
+public function import(Request $request)
+{
+    $request->validate([
+        'import_file' => 'required|mimes:xlsx,xls,csv|max:10240',
+    ]);
+
+    try {
+        $import = new MasterDistributorsImport();
+
+        // ─── This is the key line ───
+        Excel::import($import, $request->file('import_file'));
+
+        $count = $import->getImportedRowCount() ?? 0;
+
+        $message = $count === 0 
+            ? 'No valid rows were imported.'
+            : "Successfully imported $count distributor" . ($count === 1 ? '' : 's') . '!';
+
+        return redirect()
+            ->route('master-distributors.index')
+            ->with('success', $message);
+
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        // We just ignore detailed row errors and show generic message
+        return back()
+            ->with('warning', 'Some rows had validation errors and were skipped. Only valid rows were imported.')
+            ->with('error', 'Import partially completed. Check logs for details if needed.');
+            
+    } catch (\Throwable $e) {
+        \Log::error('Import failed', [
+            'error' => $e->getMessage(),
+            'file'  => $request->file('import_file')?->getClientOriginalName(),
+        ]);
+
+        return back()->with('error', 'Import failed: ' . $e->getMessage());
+    }
 }
 }
