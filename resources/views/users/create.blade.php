@@ -167,7 +167,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-6 d-none" id="branch-data">
+                <!-- <div class="col-md-6 d-none" id="branch-data">
                   <div class="input_section">
                     <label class="col-form-label">Branch data</label>
                     <div class="form-group has-default bmd-form-group">
@@ -186,7 +186,7 @@
                       @endif
                     </div>
                   </div>
-                </div>
+                </div> -->
               </div>
             </div>
             <h4 class="section-heading mb-3  h4 mt-0 text-center">Employee Information </h4>
@@ -898,6 +898,67 @@
                     </div>
                   </div>
                 </div>
+                <!-- Add after the existing leave_balance field -->
+
+<div class="col-md-6">
+    <div class="input_section">
+        <label class="col-form-label">Earned Leave (EL) Balance</label>
+        <div class="form-group has-default bmd-form-group">
+            <input type="number" 
+                   name="earned_leave_balance" 
+                   step="0.01" 
+                   class="form-control {{ $errors->has('earned_leave_balance') ? 'is-invalid' : '' }}" 
+                   value="{{ old('earned_leave_balance', $user->earned_leave_balance ?? '0.00') }}" 
+                   placeholder="e.g. 12.50">
+            @if ($errors->has('earned_leave_balance'))
+                <div class="error">
+                    <p class="text-danger">{{ $errors->first('earned_leave_balance') }}</p>
+                </div>
+            @endif
+        </div>
+        <small class="text-muted">1 EL earned per 20 working days (credited next year after joining)</small>
+    </div>
+</div>
+
+<div class="col-md-6">
+    <div class="input_section">
+        <label class="col-form-label">Casual Leave (CL) Balance</label>
+        <div class="form-group has-default bmd-form-group">
+            <input type="number" 
+                   name="casual_leave_balance" 
+                   step="0.01" 
+                   class="form-control {{ $errors->has('casual_leave_balance') ? 'is-invalid' : '' }}" 
+                   value="{{ old('casual_leave_balance', $user->casual_leave_balance ?? '0.00') }}" 
+                   placeholder="e.g. 1.50">
+            @if ($errors->has('casual_leave_balance'))
+                <div class="error">
+                    <p class="text-danger">{{ $errors->first('casual_leave_balance') }}</p>
+                </div>
+            @endif
+        </div>
+        <small class="text-muted">0.5 CL earned per 20 working days (credited after 20 days)</small>
+    </div>
+</div>
+
+<div class="col-md-6">
+    <div class="input_section">
+        <label class="col-form-label">Sick Leave (SL) Balance</label>
+        <div class="form-group has-default bmd-form-group">
+            <input type="number" 
+                   name="sick_leave_balance" 
+                   step="0.01" 
+                   class="form-control {{ $errors->has('sick_leave_balance') ? 'is-invalid' : '' }}" 
+                   value="{{ old('sick_leave_balance', $user->sick_leave_balance ?? '0.00') }}" 
+                   placeholder="e.g. 0.50">
+            @if ($errors->has('sick_leave_balance'))
+                <div class="error">
+                    <p class="text-danger">{{ $errors->first('sick_leave_balance') }}</p>
+                </div>
+            @endif
+        </div>
+        <small class="text-muted">0.5 SL earned per 20 working days (credited after 20 days)</small>
+    </div>
+</div>
                 <div class="col-md-6">
                   <div class="input_section">
                     <label class="col-form-label">Grade</label>
@@ -1029,7 +1090,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-6">
+                <!-- <div class="col-md-6">
                   <div class="input_section">
                     <label class="col-form-label">{!! trans('panel.user.branch_name') !!}</label>
                     <div class="form-group has-default bmd-form-group">
@@ -1059,7 +1120,7 @@
                       @endif
                     </div>
                   </div>
-                </div>
+                </div> -->
                 <div class="col-md-6">
                   <div class="input_section">
                     <label class="col-form-label">Primary {!! trans('panel.user.branch_name') !!}</label>

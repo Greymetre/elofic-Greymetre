@@ -53,13 +53,16 @@ class User extends Authenticatable implements HasMedia
         'division_id',
         'warehouse_id',
         'payroll',
-        'lave_balance',
+        'leave_balance',
+        'compb_off',
         'grade',
         'blood_group',
         'personal_number',
         'sales_type',
         'customerid',
-        'show_attandance_report'
+        'show_attandance_report','earned_leave_balance',
+    'casual_leave_balance',
+    'sick_leave_balance',
     ];
 
     public function registerMediaCollections(): void

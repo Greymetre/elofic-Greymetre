@@ -29,12 +29,12 @@
                     @if($customer->shop_photo)
                         <img src="{{ asset('storage/'.$customer->shop_photo) }}"
                              class="img-fluid rounded shadow-sm workshop-image-popup cursor-pointer"
-                             style="max-height: 350px; object-fit: cover;"
+                             style="max-height: 250px; object-fit: cover;"
                              alt="Shop Photo">
                     @else
                         <img src="{{ asset('assets/img/placeholder.jpg') }}"
                              class="img-fluid rounded shadow-sm"
-                             style="max-height: 350px; object-fit: cover;"
+                             style="max-height: 250px; object-fit: cover;"
                              alt="No Shop Photo">
                         <p class="text-muted mt-3 mb-0"><em>No photo uploaded</em></p>
                     @endif
@@ -51,12 +51,12 @@
                     @if($customer->owner_photo)
                         <img src="{{ asset('storage/'.$customer->owner_photo) }}"
                              class="img-fluid rounded shadow-sm workshop-image-popup cursor-pointer"
-                             style="max-height: 350px; object-fit: cover;"
+                             style="max-height: 250px; object-fit: cover;"
                              alt="Owner Photo">
                     @else
                         <img src="{{ asset('assets/img/placeholder.jpg') }}"
                              class="img-fluid rounded shadow-sm"
-                             style="max-height: 350px; object-fit: cover;"
+                             style="max-height: 250px; object-fit: cover;"
                              alt="No Owner Photo">
                         <p class="text-muted mt-3 mb-0"><em>No photo uploaded</em></p>
                     @endif

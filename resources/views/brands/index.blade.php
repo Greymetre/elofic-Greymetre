@@ -6,7 +6,7 @@
         <div class="card-icon">
           <i class="material-icons">perm_identity</i>
         </div>
-        <h4 class="card-title ">{!! trans('panel.brand.title_singular') !!}{!! trans('panel.global.list') !!}
+        <h4 class="card-title ">{!! trans('panel.brand.title_singular') !!} {!! trans('panel.global.list') !!}
               <span class="">
                 <div class="btn-group header-frm-btn">
                   <div class="next-btn">
@@ -114,7 +114,7 @@
            
             </div>
             </div>
-            <div class="col-md-3 col-sm-3">
+            <!-- <div class="col-md-3 col-sm-3">
               <div class="fileinput fileinput-new text-center" data-provides="fileinput">
               
                <div class="fileinput-new thumbnail">
@@ -132,10 +132,10 @@
                <div class="fileinput-preview fileinput-exists thumbnail img-circle"></div>
                <label class="bmd-label-floating">{!! trans('panel.brand.fields.brand_image') !!}</label>
              </div>
-            </div>
+            </div> -->
         </div>
         <div class="clearfix"></div>
-        <div class="modal-footer">
+        <div class="">
           <input type="hidden" name="id" id="brand_id" />
           {{ Form::submit('Submit', array('class' => 'btn btn-info save')) }}
           {{ Form::close() }}

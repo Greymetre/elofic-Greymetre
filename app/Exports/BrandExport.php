@@ -14,12 +14,12 @@ class BrandExport implements FromCollection,WithHeadings,ShouldAutoSize,WithMapp
 {
     public function collection()
     {
-        return Brand::select('id','brand_name','brand_image')->latest()->get();   
+        return Brand::select('id','brand_name')->latest()->get();   
     }
 
     public function headings(): array
     {
-        return ['id','brand_name','brand_image'];
+        return ['Id','Maker Name'];
     }
 
     public function map($data): array
@@ -27,7 +27,7 @@ class BrandExport implements FromCollection,WithHeadings,ShouldAutoSize,WithMapp
         return [
             $data['id'],
             $data['brand_name'],
-            $data['brand_image'],
+            // $data['brand_image'],
         ];
     }
 }

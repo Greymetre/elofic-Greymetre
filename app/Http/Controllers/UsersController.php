@@ -113,9 +113,9 @@ class UsersController extends Controller
             'latitude'   =>  isset($request['latitude']) ? $request['latitude'] : '',
             'longitude' => isset($request['longitude']) ? $request['longitude'] : '',
             'location' => !empty($request['location']) ? $request['location'] : '',
-            'branch_id' => (isset($request['branch_id']) && count($request['branch_id']) > 0) ? implode(',', $request['branch_id']) : '',
-            'primary_branch_id' => isset($request['primary_branch_id']) ? $request['primary_branch_id'] : '',
-            'branch_show' => isset($request['branch_show']) ? implode(',', $request['branch_show']) : NULL,
+            // 'branch_id' => (isset($request['branch_id']) && count($request['branch_id']) > 0) ? implode(',', $request['branch_id']) : '',
+            // 'primary _branch_id' => isset($request['primary_branch_id']) ? $request['primary_branch_id'] : '',
+            // 'branch_show' => isset($request['branch_show']) ? implode(',', $request['branch_show']) : NULL,
             'department_id' => isset($request['department_id']) ? $request['department_id'] : '',
             'employee_codes' => isset($request['employee_codes']) ? $request['employee_codes'] : '',
             'designation_id' => isset($request['designation_id']) ? $request['designation_id'] : '',
@@ -125,6 +125,9 @@ class UsersController extends Controller
             'payroll' => isset($request['payroll']) ? $request['payroll'] : '',
             'warehouse_id' => isset($request['warehouse_id']) ? $request['warehouse_id'] : NULL,
             'customerid' => isset($request['customerid']) ? $request['customerid'] : NULL,
+            'earned_leave_balance'    => $request->input('earned_leave_balance', '0.00'),
+            'casual_leave_balance'    => $request->input('casual_leave_balance', '0.00'),
+            'sick_leave_balance'      => $request->input('sick_leave_balance', '0.00'),
         ]);
         $user->roles()->sync($request->input('roles', []));
         $permissions = $user->getPermissionsViaRoles()->pluck('name');
@@ -200,7 +203,7 @@ class UsersController extends Controller
             'previous_exp'   =>  isset($request['previous_exp']) ? $request['previous_exp'] : null,
             'current_company_tenture'   =>  isset($request['current_company_tenture']) ? $request['current_company_tenture'] : null,
             'total_exp'   =>  isset($request['total_exp']) ? $request['total_exp'] : null,
-
+            
         ]);
         if ($request->education_detail && count($request->education_detail) > 0) {
             foreach ($request->education_detail as $education_detail) {
@@ -312,6 +315,9 @@ class UsersController extends Controller
             'previous_exp'   =>  isset($request['previous_exp']) ? (int)$request['previous_exp'] : 0,
             'current_company_tenture'   =>  isset($request['current_company_tenture']) ? (int)$request['current_company_tenture'] : 0,
             'total_exp'   =>  isset($request['total_exp']) ? (int)$request['total_exp'] : 0,
+            'earned_leave_balance'    => $request->input('earned_leave_balance', $user->earned_leave_balance ?? '0.00'),
+    'casual_leave_balance'    => $request->input('casual_leave_balance', $user->casual_leave_balance ?? '0.00'),
+    'sick_leave_balance'      => $request->input('sick_leave_balance', $user->sick_leave_balance ?? '0.00'),
         ]);
         if ($request->education_detail && count($request->education_detail) > 0) {
             foreach ($request->education_detail as $education_detail) {
@@ -378,6 +384,12 @@ class UsersController extends Controller
         $user->warehouse_id = isset($request['warehouse_id']) ? $request['warehouse_id'] : null;
         $user->branch_show = isset($request['branch_show']) ? implode(',', $request['branch_show']) : null;
         $user->sales_type = isset($request['sales_type']) ? $request['sales_type'] : '';
+        // $user->leave_balance           = $request->leave_balance ?? $user->leave_balance ?? '0.00';
+$user->earned_leave_balance    = $request->earned_leave_balance ?? $user->earned_leave_balance ?? '0.00';
+$user->casual_leave_balance    = $request->casual_leave_balance ?? $user->casual_leave_balance ?? '0.00';
+$user->sick_leave_balance      = $request->sick_leave_balance ?? $user->sick_leave_balance ?? '0.00';
+
+$user->save();
         if ($user->save()) {
             $user->roles()->sync($request->input('roles', []));
             $permissions = $user->getPermissionsViaRoles()->pluck('name');

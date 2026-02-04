@@ -136,6 +136,15 @@ class BrandController extends Controller
       //abort_if(Gate::denies('brand_download'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         if (ob_get_contents()) ob_end_clean();
         ob_start();
-        return Excel::download(new BrandExport, 'brands.xlsx');
+        return Excel::download(new BrandExport, 'Makers.xlsx');
     }
+    public function downloadTemplate()
+{
+    abort_if(Gate::denies('brand_download'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+    if (ob_get_contents()) ob_end_clean();
+    ob_start();
+
+    return Excel::download(new \App\Exports\BrandTemplate, 'maker-import-template.xlsx');
+}
 }

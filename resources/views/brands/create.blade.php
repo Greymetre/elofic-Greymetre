@@ -6,7 +6,7 @@
         <div class="card-icon">
           <i class="material-icons">perm_identity</i>
         </div>
-        <h4 class="card-title ">{{ trans('panel.global.create') }} {!! trans('panel.brand.title_singular') !!}
+        <h4 class="card-title ">{{ trans('panel.global.create') }} {!! trans('panel.brand.title_singular') !!} 
           <span class="pull-right">
             <div class="btn-group">
               @if(auth()->user()->can(['brand_access']))
@@ -37,7 +37,7 @@
             'files'=>true
           ]) !!}
           <div class="row">
-            <div class="col-md-8">
+              <div class="col-md-8">
                 <div class="input_section">
                   <label class="col-form-label">{!! trans('panel.brand.fields.brand_name') !!} <span class="text-danger"> *</span></label>
                  
@@ -47,10 +47,13 @@
                         <div class="error"><p class="text-danger">{{ $errors->first('brand_name') }}</p></div>
                       @endif
             
-                  </div>
+                    </div>
                 </div>
               </div>
-            <div class="col-md-3 col-sm-3">
+              <div class="card-footer">
+            {{ Form::submit('Submit', array('class' => 'btn btn-theme')) }}
+        </div>
+            <!-- <div class="col-md-3 col-sm-3">
               <div class="fileinput fileinput-new text-center" data-provides="fileinput">
                  
                    <div class="fileinput-new thumbnail">
@@ -68,11 +71,9 @@
                    <div class="fileinput-preview fileinput-exists thumbnail img-circle"></div>
                    <label class="bmd-label-floating">{!! trans('panel.brand.fields.brand_image') !!}</label>
                  </div>
-            </div>
+            </div> -->
           </div>
-        <div class="card-footer pull-right">
-            {{ Form::submit('Submit', array('class' => 'btn btn-theme')) }}
-        </div>
+        
         {{ Form::close() }} 
       </div>
     </div>

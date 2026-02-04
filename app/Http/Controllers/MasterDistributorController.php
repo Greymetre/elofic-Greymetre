@@ -234,7 +234,7 @@ if ($request->filled('billing_city')) {
         'account_number'     => 'required|string',
         'ifsc'               => 'required|string',
         'credit_limit'       => 'required|numeric|min:0',
-        'credit_days'        => 'required|integer|min:0',
+        'credit_days'        => 'required|integer|min:0' ,
 
         // Sales
         'monthly_sales'      => 'required|numeric|min:0',
@@ -359,6 +359,9 @@ if ($data['same_as_billing']) {
         $data['shipping_pincode_id'] = $request->pincode_id;
     }
 
+$data['credit_days'] = $request->input('credit_days') !== null 
+    ? $request->input('credit_days') 
+    : 7;
     // Create
     MasterDistributor::create($data);
 

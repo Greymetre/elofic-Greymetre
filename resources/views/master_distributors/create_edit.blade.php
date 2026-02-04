@@ -568,20 +568,38 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label class="col-form-label">
-                                            Primary Mobile <span class="text-danger">*</span>
-                                        </label>
-                                        {!! Form::text('mobile', old('mobile', $distributor->mobile ?? ''),
-                                        ['class'=>'form-control fillable-field mandatory-field']) !!}
-                                    </div>
+<div class="col-md-6 mb-3">
+    <label class="col-form-label">
+        Primary Mobile <span class="text-danger">*</span>
+    </label>
+    {!! Form::text('mobile', old('mobile', $distributor->mobile ?? ''), [
+        'class' => 'form-control fillable-field mandatory-field',
+        'id' => 'mobile',
+        'maxlength' => '10',
+        'pattern' => '[0-9]{10}',
+        'title' => 'Please enter exactly 10 digits (0-9)',
+        'placeholder' => 'Enter 10-digit mobile number',
+        'required' => true
+    ]) !!}
+    <div class="invalid-feedback">
+        Mobile number must be exactly 10 digits (0–9 only).
+    </div>
+</div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label class="col-form-label">Alternate Mobile</label>
-                                        {!! Form::text('alternate_mobile', old('alternate_mobile',
-                                        $distributor->alternate_mobile ?? ''), ['class'=>'form-control fillable-field'])
-                                        !!}
-                                    </div>
+<div class="col-md-6 mb-3">
+    <label class="col-form-label">Alternate Mobile</label>
+    {!! Form::text('alternate_mobile', old('alternate_mobile', $distributor->alternate_mobile ?? ''), [
+        'class' => 'form-control fillable-field',
+        'id' => 'alternate_mobile',
+        'maxlength' => '10',
+        'pattern' => '[0-9]{10}',
+        'title' => 'Enter exactly 10 digits or leave blank',
+        'placeholder' => 'Optional – 10-digit number'
+    ]) !!}
+    <div class="invalid-feedback">
+        Alternate mobile must be exactly 10 digits (if filled).
+    </div>
+</div>
 
                                     <div class="col-md-6 mb-3">
                                         <label class="col-form-label">
@@ -1400,11 +1418,10 @@
     <label class="col-form-label">
         Credit Limit Assigned (Days) <span class="text-danger">*</span>
     </label>
-    {!! Form::number('credit_limit', old('credit_limit', 7), [
+    {!! Form::number('credit_days', old('credit_days', 7), [
         'class'          => 'form-control mandatory-field',
-        'min'            => '0',     // optional but recommended
-        'step'           => '1',     // optional – whole numbers only
-        'placeholder'    => '7',     // optional visual hint (shows when empty)
+      
+        'placeholder'    => '7',  
     ]) !!}
 </div>
 
@@ -1853,6 +1870,68 @@
 
         <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+        // Helper function to validate exactly 10 digits
+    function validateMobile(input) {
+        const value = input.value.trim();
+        // Remove any previous custom error
+        input.setCustomValidity('');
+
+        if (value === '') {
+            // For alternate mobile → allowed to be empty
+            if (input.id === 'alternate_mobile') {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                return;
+            }
+            // For primary mobile → required
+            input.setCustomValidity('Mobile number is required.');
+            return;
+        }
+
+        // Must be exactly 10 digits
+        if (!/^\d{10}$/.test(value)) {
+            if (value.length !== 10) {
+                input.setCustomValidity(`Must be exactly 10 digits (currently ${value.length}).`);
+            } else {
+                input.setCustomValidity('Only numbers 0-9 are allowed.');
+            }
+        } else {
+            input.setCustomValidity(''); // valid
+        }
+    }
+
+    const mobileInput = document.getElementById('mobile');
+    const altMobileInput = document.getElementById('alternate_mobile');
+
+    if (mobileInput) {
+        // Real-time validation
+        mobileInput.addEventListener('input', () => validateMobile(mobileInput));
+        // Also validate on blur (when user leaves the field)
+        mobileInput.addEventListener('blur', () => {
+            mobileInput.reportValidity();
+            validateMobile(mobileInput);
+        });
+    }
+
+    if (altMobileInput) {
+        altMobileInput.addEventListener('input', () => validateMobile(altMobileInput));
+        altMobileInput.addEventListener('blur', () => {
+            altMobileInput.reportValidity();
+            validateMobile(altMobileInput);
+        });
+    }
+
+    // Optional: Prevent non-numeric input right away
+    [mobileInput, altMobileInput].forEach(input => {
+        if (input) {
+            input.addEventListener('keypress', function(e) {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
 
             const fileInput = document.getElementById('documents');
     const previewContainer = document.getElementById('documents-preview');
