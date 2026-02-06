@@ -84,4 +84,12 @@ $(document).ready(function() {
     });
 });
 </script>
+@if(session()->has('last60Attendance'))
+<script>
+    console.log(
+        '✅ Last 60 Days Attendance:',
+        {{ session('last60Attendance') }}
+    );
+</script>
+@endif
 </x-app-layout>

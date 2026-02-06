@@ -35,6 +35,8 @@ use DatePeriod;
 use DateInterval;
 use Stevebauman\Location\Drivers\IpInfo;
 use Stevebauman\Location\Facades\Location;
+use Illuminate\Support\Facades\Log;
+
 
 class AttendanceController extends Controller
 {
@@ -323,6 +325,12 @@ class AttendanceController extends Controller
         }
       }
 
+
+      if ($attendance_details && $attendance_details->attendance_status == '1' && in_array($attendance_details->working_type, ['Office Work', 'Local Market Visit', 'Tour', /* baaki sab */])) {
+    Log::info("Present found for user: {$item->id}, date: {$check}, working_type: {$attendance_details->working_type}");
+    $label_data[] = 'P';
+    $total_p++;
+}
       //neww
 
       $sundayPunchinCount = CompOffLeave::where('comp_off_date', '>=', $last60Days)->where('is_used', false)
@@ -392,6 +400,7 @@ class AttendanceController extends Controller
     ];
 
     $label = array_merge($label1, $label2, $label3);
+    
 
     $export = new ExcelExport($label, $data);
 
@@ -414,7 +423,9 @@ class AttendanceController extends Controller
       : $request->ip();
     $accessToken = '4060dae74e438c';
     $location = Location::get($ipAddress);
-    $addressP = getLatLongToAddress($location->latitude, $location->longitude);
+    // $addressP = getLatLongToAddress($location->latitude, $location->longitude);
+        $addressP = '';
+
     $user = User::find($request['user_id']);
     $branchIds = explode(',', $user->branch_id);
 
@@ -492,8 +503,215 @@ class AttendanceController extends Controller
           }
         }
       }
+
+
+
+$user = User::findOrFail($request['user_id']);
+
+$today = Carbon::today();
+$joiningDate = $user->date_of_joining
+    ? Carbon::parse($user->date_of_joining)
+    : null;
+    $todayDate = $today->format('Y-m-d');
+
+    $isSunday = $today->isSunday();
+
+    $branchIds = explode(',', $user->branch_id);
+$holidayDates = Holiday::whereIn('branch', $branchIds)
+    ->pluck('holiday_date')
+    ->map(fn ($d) => explode(',', $d))
+    ->collapse()
+    ->map(fn ($d) => Carbon::parse(trim($d))->format('Y-m-d'))
+    ->toArray();
+
+$isHoliday = in_array($todayDate, $holidayDates);
+
+if (!$joiningDate) {
+    dd('Joining date missing');
+}
+
+if ($isSunday || $isHoliday) {
+
+    $alreadyEarned = CompOffLeave::where('user_id', $user->id)
+        ->whereDate('comp_off_date', $today)
+        ->exists();
+
+    if (!$alreadyEarned) {
+
+        CompOffLeave::create([
+            'user_id'       => $user->id,
+            'leave_id'      => null,        // future use
+            'comp_off_date' => $today,
+            'expiry_date'   => $today->copy()->addDays(60),
+            'is_used'       => false,
+            'balance'       => 1,
+        ]);
+    }
+}
+$expiredCompOffs = CompOffLeave::where('user_id', $user->id)
+    ->where('is_used', false)
+    ->whereDate('expiry_date', '<', Carbon::today())
+    ->get();
+
+if ($expiredCompOffs->count() > 0) {
+
+    CompOffLeave::whereIn('id', $expiredCompOffs->pluck('id'))->delete();
+}
+
+$activeCompOffBalance = CompOffLeave::where('user_id', $user->id)
+    ->where('is_used', false)
+    ->whereDate('expiry_date', '>=', Carbon::today())
+    ->sum('balance'); // usually count
+$user->update([
+    'compb_off' => $activeCompOffBalance
+]);
+
+
+/*
+|--------------------------------------------------------------------------
+| ACCRUAL START DATE
+|--------------------------------------------------------------------------
+| If last_leave_accrual_date exists → next day
+| Else → joining date
+*/
+
+$accrualStartDate = $user->last_leave_accrual_date
+    ? Carbon::parse($user->last_leave_accrual_date)->addDay()
+    : $joiningDate->copy();
+
+/*
+|--------------------------------------------------------------------------
+| HOLIDAYS
+|--------------------------------------------------------------------------
+*/
+
+$branchIds = explode(',', $user->branch_id);
+
+$holidayDates = Holiday::whereIn('branch', $branchIds)
+    ->pluck('holiday_date')
+    ->map(fn ($d) => explode(',', $d))
+    ->collapse()
+    ->map(fn ($d) => Carbon::parse(trim($d))->format('Y-m-d'))
+    ->toArray();
+
+/*
+|--------------------------------------------------------------------------
+| COLLECT WORKING DAYS (FROM ACCRUAL START → TODAY)
+|--------------------------------------------------------------------------
+*/
+
+$workingDays = [];
+$current = $accrualStartDate->copy();
+
+while ($current <= $today) {
+
+    $date = $current->format('Y-m-d');
+
+    if (
+        !$current->isSunday() &&
+        !in_array($date, $holidayDates)
+    ) {
+        $workingDays[] = $date;
+    }
+
+    $current->addDay();
+}
+
+/*
+|--------------------------------------------------------------------------
+| CALCULATE 20-DAY CYCLES
+|--------------------------------------------------------------------------
+*/
+
+$totalWorkingDays = count($workingDays);
+$newCycles = intdiv($totalWorkingDays, 20);
+
+/*
+|--------------------------------------------------------------------------
+| APPLY LEAVE ACCRUAL (ONLY IF NEW CYCLES FOUND)
+|--------------------------------------------------------------------------
+*/
+
+$cycleEndDates = [];
+
+if ($newCycles > 0) {
+
+    // Get exact 20th working day dates
+    for ($i = 1; $i <= $newCycles; $i++) {
+        $cycleEndDates[] = $workingDays[($i * 20) - 1];
+    }
+
+    $user->increment('casual_leave_balance',  $newCycles * 0.5);
+    $user->increment('sick_leave_balance',    $newCycles * 0.5);
+    $user->increment('earned_leave_balance',  $newCycles * 1);
+
+    $user->update([
+        'last_leave_accrual_date' => end($cycleEndDates),
+    ]);
+}
+
+/*
+|--------------------------------------------------------------------------
+| EARNED LEAVE CLAIMABLE LOGIC (AFTER 1 YEAR)
+|--------------------------------------------------------------------------
+*/
+
+// 1 year completion date
+$earnedLeaveUnlockDate = $joiningDate->copy()->addYear();
+
+// Check if 1 year completed
+if (
+    $today->greaterThanOrEqualTo($earnedLeaveUnlockDate) &&
+    $user->earned_leave_claim_activated_at === null
+) {
+
+    // Move all earned leaves to claimable
+    $user->update([
+        'claimable_earned_leave_balance' => $user->earned_leave_balance,
+        'earned_leave_claim_activated_at' => $today,
+    ]);
+}
+
+/*
+|--------------------------------------------------------------------------
+| DEBUG OUTPUT
+|--------------------------------------------------------------------------
+*/
+
+// dd('✅ LEAVE ACCRUAL SUMMARY', [
+//     'user_id' => $user->id,
+//     'joining_date' => $joiningDate->format('d M Y'),
+//     'accrual_start_date' => $accrualStartDate->format('Y-m-d'),
+
+//     'working_days_count' => $totalWorkingDays,
+//     'working_day_dates'  => $workingDays,
+
+//     'new_cycles' => $newCycles,
+//     'cycle_end_dates' => $cycleEndDates,
+
+//     'updated_balances' => [
+//         'casual' => $user->casual_leave_balance,
+//         'sick'   => $user->sick_leave_balance,
+//         'earned' => $user->earned_leave_balance,
+//     ],
+
+//     'last_leave_accrual_date' => $user->last_leave_accrual_date,
+//         'earned_leave_unlock_date' => $earnedLeaveUnlockDate->format('d M Y'),
+//     'earned_leave_balance' => $user->earned_leave_balance,
+//     'claimable_earned_leave_balance' => $user->claimable_earned_leave_balance,
+//     'earned_leave_claim_activated_at' => $user->earned_leave_claim_activated_at,
+//      'today' => $todayDate,
+//     'is_sunday' => $isSunday,
+//     'is_holiday' => $isHoliday,
+//     'active_comp_off' => $activeCompOffBalance,
+
+// ]);
+
+
+
       return Redirect::to('reports/attendancereport')->with('message_success', 'PunchIn Successfully');
     }
+
     return redirect()->back()->with('message_danger', 'Error in Lead Stages')->withInput();
     // } catch (\Exception $e) {
     //   return redirect()->back()->withErrors($e->getMessage())->withInput();

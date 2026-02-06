@@ -205,7 +205,7 @@
         <div class="card-body py-2 px-2">
           <i class="material-icons text-warning mb-1">history_edu</i>
           <h6 class="text-warning fw-bold mb-1">Comp-off</h6>
-          <h3 class="fw-bold mb-0" id="comp_off_balance_l">-</h3>
+          <h3 class="fw-bold mb-0" id="compb_off_l">-</h3>
           <small class="text-muted">days</small>
         </div>
       </div>
@@ -242,7 +242,7 @@
                 <div class="input_section">
                   <label class="col-form-label">Comp off Balance</label>
                   <div>
-                    <input type="number" readonly name="comp_off_balance" id="comp_off_balance" class="form-control" value="">
+                    <input type="number" readonly name="compb_off" id="compb_off" class="form-control" value="">
                   </div>
                 </div>
               </div>
@@ -277,7 +277,7 @@
                       <option value="Earned Leave" data-is-city="false">Earned Leave</option>
                       <option value="Casual Leave" data-is-city="false">Casual Leave</option>
                       <option value="Sick Leave" data-is-city="false">Sick Leave</option>
-                      <option value="Comp-off Balance" data-is-city="false">Comp-off Balance</option>
+                      <option value="Compoff Balance" data-is-city="false">Comp-off Balance</option>
                     </select>
                   </div>
                 </div>
@@ -361,7 +361,7 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-6">
+              <!-- <div class="col-md-6">
                 <div class="input_section">
                   <label class="col-form-label">Leave Balance</label>
                   <div>
@@ -388,12 +388,12 @@
     <label class="col-form-label">Sick Leave Balance</label>
     <input type="number" readonly id="sick_leave_balance_c" class="form-control">
   </div>
-</div>
+</div> -->
               <div class="col-md-6">
                 <div class="input_section">
                   <label class="col-form-label">Comp off Balance</label>
                   <div>
-                    <input type="number" readonly name="comp_off_balance" id="comp_off_balance_c" class="form-control" value="">
+                    <input type="number" readonly name="compb_off" id="compb_off_c" class="form-control" value="">
                   </div>
                 </div>
               </div>
@@ -699,7 +699,7 @@
   if (res.status == 'success') {
 
     // Enable / disable comp-off option
-    if (res.comp_off_balance > 0) {
+    if (res.compb_off > 0) {
       $('#bal_type option[value="Comp-off Balance"]').prop('disabled', false);
     } else {
       $('#bal_type option[value="Comp-off Balance"]').prop('disabled', true);
@@ -727,7 +727,7 @@
     $("#earned_leave_balance_l").text(res.earned_leave_balance ?? 0);
     $("#casual_leave_balance_l").text(res.casual_leave_balance ?? 0);
     $("#sick_leave_balance_l").text(res.sick_leave_balance ?? 0);
-    $("#comp_off_balance_l").text(res.comp_off_balance ?? 0);
+    $("#compb_off_l").text(res.compb_off ?? 0);
   }
 }
 
@@ -762,13 +762,13 @@
         },
         success: function(res) {
           if (res.status == 'success') {
-            if (res.comp_off_balance != '' && res.comp_off_balance > 0) {
+            if (res.compb_off != '' && res.compb_off > 0) {
               $('#bal_type option[value="Comp-off Balance"]').prop('disabled', false);
             } else {
               $('#bal_type option[value="Comp-off Balance"]').prop('disabled', true);
             }
             $("#leave_balance_c").val(res.leave_balance);
-            $("#comp_off_balance_c").val(res.comp_off_balance);
+            $("#compb_off_c").val(res.compb_off);
             $("#earned_leave_balance_c").val(res.earned_leave_balance);
 $("#casual_leave_balance_c").val(res.casual_leave_balance);
 $("#sick_leave_balance_c").val(res.sick_leave_balance);

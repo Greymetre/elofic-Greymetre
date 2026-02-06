@@ -63,6 +63,11 @@ class User extends Authenticatable implements HasMedia
         'show_attandance_report','earned_leave_balance',
     'casual_leave_balance',
     'sick_leave_balance',
+    'date_of_joining',
+    'last_leave_accrual_date',
+    'earned_leave_claim_activated_at',
+    'claimable_earned_leave_balance'
+
     ];
 
     public function registerMediaCollections(): void

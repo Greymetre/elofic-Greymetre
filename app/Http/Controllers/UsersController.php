@@ -128,6 +128,7 @@ class UsersController extends Controller
             'earned_leave_balance'    => $request->input('earned_leave_balance', '0.00'),
             'casual_leave_balance'    => $request->input('casual_leave_balance', '0.00'),
             'sick_leave_balance'      => $request->input('sick_leave_balance', '0.00'),
+            'date_of_joining' => $request->input('date_of_joining'),   
         ]);
         $user->roles()->sync($request->input('roles', []));
         $permissions = $user->getPermissionsViaRoles()->pluck('name');
@@ -388,7 +389,7 @@ class UsersController extends Controller
 $user->earned_leave_balance    = $request->earned_leave_balance ?? $user->earned_leave_balance ?? '0.00';
 $user->casual_leave_balance    = $request->casual_leave_balance ?? $user->casual_leave_balance ?? '0.00';
 $user->sick_leave_balance      = $request->sick_leave_balance ?? $user->sick_leave_balance ?? '0.00';
-
+$user->date_of_joining = $request->input('date_of_joining');
 $user->save();
         if ($user->save()) {
             $user->roles()->sync($request->input('roles', []));

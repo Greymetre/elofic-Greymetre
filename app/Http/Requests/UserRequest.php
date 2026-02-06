@@ -40,6 +40,7 @@ class UserRequest extends FormRequest
                     'status_id'     => 'nullable|numeric|exists:statuses,id',
                     'image'        => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ];
+                
                 break;
             default :
                 $rules = [

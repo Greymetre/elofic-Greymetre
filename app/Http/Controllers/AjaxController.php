@@ -1685,7 +1685,7 @@ class AjaxController extends Controller
         $comp_off_balance = CompOffLeave::where('comp_off_date', '>=', $last60Days)->where('is_used', false)
             ->where('user_id', $request->user_id)
             ->sum('balance');
-        return response()->json(['status' => 'success', 'leave_balance' => $data->leave_balance, 'comp_off_balance' => $comp_off_balance,    'earned_leave_balance' => $data->earned_leave_balance,
+        return response()->json(['status' => 'success', 'leave_balance' => $data->leave_balance,'compb_off' => $data->compb_off, 'comp_off_balance' => $comp_off_balance,    'earned_leave_balance' => $data->earned_leave_balance,
     'casual_leave_balance' => $data->casual_leave_balance,
     'sick_leave_balance'   => $data->sick_leave_balance,]);
     }
