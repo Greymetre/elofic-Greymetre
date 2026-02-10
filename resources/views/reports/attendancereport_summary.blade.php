@@ -111,6 +111,7 @@
               <th>No</th>
               <th>User ID</th>
               <th>Status</th>
+              <th>Employee Code </th>
               <th>User Name</th>
               <th>Punch in Date</th>
               <th>Punch In Time</th>
@@ -280,6 +281,11 @@
             {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             {data: 'user_id', name: 'user_id',"defaultContent": ''},
             {data: 'action_status', name: 'action_status',"defaultContent": '',className: 'td-actions text-center', orderable: false, searchable: false},
+                              { 
+        data: 'users.employee_codes',     // ← important: adjust according to your relation
+        name: 'users.employee_codes',
+        defaultContent: '-'
+    },
             {data: 'users.name', name: 'users.name',"defaultContent": '', orderable: false},
             {data: 'punchin_date', name: 'punchin_date',"defaultContent": '', orderable: false, searchable: false},
             {data: 'punchin_time', name: 'punchin_time',"defaultContent": '', orderable: false, searchable: false},

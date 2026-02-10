@@ -36,6 +36,7 @@ use DateInterval;
 use Stevebauman\Location\Drivers\IpInfo;
 use Stevebauman\Location\Facades\Location;
 use Illuminate\Support\Facades\Log;
+use App\Exports\attendanceSummaryDownload;
 
 
 class AttendanceController extends Controller
@@ -84,6 +85,17 @@ class AttendanceController extends Controller
         }
       })
         ->latest();
+      dd(
+            $data->take(10)->get(['id', 'user_id', 'punchin_date', 'punchin_time'])
+                 ->map(function($row) {
+                     return [
+                         'id'           => $row->id,
+                         'user_id'      => $row->user_id,
+                         'date'         => $row->punchin_date,
+                         'punchin_time' => $row->punchin_time ?? '— NULL —',
+                     ];
+                 })
+        );
       return Datatables::of($data)
         ->addIndexColumn()
         ->editColumn('punchin_date', function ($data) {
@@ -93,6 +105,7 @@ class AttendanceController extends Controller
           return isset($data->worked_time) ? $data->worked_time : '';
         })
         ->make(true);
+
     }
   }
 
@@ -106,308 +119,590 @@ class AttendanceController extends Controller
 
 
 
-  public function attendanceSummaryDownload(Request $request)
-  {
+//   public function attendanceSummaryDownload(Request $request)
+//   {
 
 
-    $filename = 'attendance-summary-report.xlsx';
-    $start_date = $request->start_date;
-    $end_date = $request->end_date;
+//     $filename = 'attendance-summary-report.xlsx';
+//     $start_date = $request->start_date;
+//     $end_date = $request->end_date;
+//     $executive_id = $request->executive_id;
+//     $end_date = date('Y-m-d', strtotime($end_date . "+1 days"));
+    
+    
+
+//   if (empty($start_date) && empty($end_date)) {
+//         $now = Carbon::now();
+        
+//         $start_date = $now->startOfMonth()->format('Y-m-d');   // 1st of current month
+//         $end_date   = $now->endOfMonth()->format('Y-m-d');     // last day of current month
+//     }
+
+//     $period = new DatePeriod(
+//       new DateTime($start_date),
+//       new DateInterval('P1D'),
+//       new DateTime($end_date)
+//     );
+
+    
+
+//     $last60Days = Carbon::now()->subDays(60);
+
+
+
+//     $attendancesummary = User::with(['attendance_details', 'createdbyname', 'getbranch', 'userinfo'])->where('active', 'Y')->whereDoesntHave('roles', function ($query) {
+//       $query->whereIn('id', config('constants.customer_roles'));
+//     })->where('show_attandance_report', '1');
+//     if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
+//       $attendancesummary = $attendancesummary->whereIn('id', getUsersReportingToAuth());
+//     }
+
+//     if ($executive_id) {
+//       $attendancesummary = $attendancesummary->where('id', $executive_id);
+//     }
+
+//     $attendancesummary = $attendancesummary->limit(4500)->get();
+
+//     $date1 = $start_date;
+//     $date2 = $end_date;
+
+
+//     $label2 = [];
+
+//     //new
+
+//     foreach ($period as $key => $value) {
+
+//       $label2[] =  $value->format('j-M-Y');
+//       $like_date =  $value->format('j-M-Y');
+//     }
+
+
+//     $data = $attendancesummary->map(function ($item, $key) use ($label2, $date1, $date2, $period, $last60Days) {
+
+
+//       //neww
+//       $label_data = [];
+//       $total_wo = 0;
+//       $total_a = 0;
+//       $total_lop = 0;
+//       $total_mis = 0;
+//       $total_pw = 0;
+//       $total_h = 0;
+//       $total_hd = 0;
+//       $total_p = 0;
+//       $total_pn = 0;
+//       $total_atte = 0;
+//       $total_al = 0;
+//       $total_hdal = 0;
+//       $total_co = 0;
+//       $total_con = 0;
+
+//       foreach ($period as $key => $value) {
+//         $like_date =  $value->format('j-M-Y');
+//         $total_atte++;
+//         $check = $value->format('Y-m-d');
+
+//         //last new
+
+//         $attendance_details = Attendance::where(['user_id' => $item->id])->where('punchin_date', 'like', $check . '%')->first();
+
+
+//         ///nnn
+
+//         $userId = $item->id;
+//         $branchId = $item->branch_id;
+//         $holiday_detail = Holiday::where('branch', $branchId)->get();
+//         $holiday_dates = $holiday_detail->pluck('holiday_date')->toArray(); // Extract holiday_date values
+//         $check_date_attendance = explode(',', implode(',', $holiday_dates));
+
+//         if (in_array($check, $check_date_attendance)) {
+//           $label_data[] = 'H';
+//           $total_h++;
+//         } else {
+
+
+//           ///nnn  
+
+//           $dayname = date('l', strtotime($check));
+
+//           if (!empty($attendance_details)) {
+
+//             if ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave' || $attendance_details->working_type == 'Full Day Leave' || $attendance_details->working_type == 'Leave') {
+//               $leaveExists = Leave::where('user_id', $attendance_details->user_id)
+//                 ->whereDate('from_date', '<=', $attendance_details->punchin_date)
+//                 ->whereDate('to_date', '>=', $attendance_details->punchin_date)
+//                 ->first();
+//             }
+
+//             if ($attendance_details->attendance_status == '1') {
+//               if ($attendance_details->working_type == 'Leave' || $attendance_details->working_type == 'Full Day Leave') {
+//                 if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
+//                   $label_data[] =  'Comp Off';
+//                   $total_co++;
+//                 } else {
+//                   $label_data[] =  'AL';
+//                   $total_al++;
+//                 }
+//               } elseif ($dayname == 'Sunday') {
+//                 $label_data[] =  'PW';
+//                 $total_pw++;
+//               } elseif ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave') {
+//                 if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
+//                   $label_data[] =  '1/2P+1/2Comp Off';
+//                   $total_co++;
+//                 } else {
+//                   $label_data[] =  '1/2P+1/2AL';
+//                   $total_hdal++;
+//                 }
+//               } elseif ($attendance_details->working_type == 'Local Market Visit') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Office Work') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Office Meeting') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Scouting for market') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Plumber Meet') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Retailer Meet') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Service Center Visit') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Tour') {
+//                 $label_data[] =  'P';
+//                 $total_p++;
+//               } elseif ($attendance_details->working_type == 'Holiday') {
+//                 $label_data[] = 'H';
+//                 $total_h++;
+//               }
+//             } else if ($attendance_details->attendance_status == '2') {
+//               if ($attendance_details->working_type == 'Full Day Leave' || $attendance_details->working_type == 'Leave') {
+//                 if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
+//                   $label_data[] =  'Comp Off N';
+//                   $total_con++;
+//                 } else {
+//                   $label_data[] =  'LOPN';
+//                   $total_lop++;
+//                 }
+//               } elseif ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave') {
+//                 if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
+//                   $label_data[] =  '1/2P+1/2Comp Off N';
+//                   $total_con++;
+//                 } else {
+//                   $label_data[] =  '1/2P+1/2LOPN';
+//                   $total_hd++;
+//                 }
+//               } else {
+//                 $label_data[] = 'A';
+//                 $total_a++;
+//               }
+//             } else {
+//               if ($attendance_details->working_type == 'Full Day Leave' || $attendance_details->working_type == 'Leave') {
+
+//                 if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
+//                   $label_data[] =  'Comp Off N';
+//                   $total_con++;
+//                 } else {
+//                   $label_data[] =  'LOPN';
+//                   $total_lop++;
+//                 }
+//               } elseif ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave') {
+//                 if ($leaveExists->bal_type == 'Comp-off Balance') {
+//                   $label_data[] =  '1/2P+1/2Comp Off N';
+//                   $total_con++;
+//                 } else {
+//                   $label_data[] =  '1/2P+1/2LOPN';
+//                   $total_hd++;
+//                 }
+//               } else {
+//                 $label_data[] = 'PN';
+//                 $total_pn++;
+//               }
+//             }
+//           } else {
+//             $date_of_joining_object = new DateTime($item->userinfo->date_of_joining ?? '');
+
+//             if ($dayname == 'Sunday') {
+//               if ($date_of_joining_object <= $value) {
+//                 $label_data[] = 'W/o';
+//                 $total_wo++;
+//               } else {
+//                 $label_data[] = '-';
+//               }
+//             } else {
+//               if ($date_of_joining_object <= $value) {
+//                 $label_data[] = 'MIS';
+//                 $total_mis++;
+//               } else {
+//                 $label_data[] = '-';
+//               }
+//             }
+//           }
+//         }
+//       }
+
+
+//       if ($attendance_details && $attendance_details->attendance_status == '1' && in_array($attendance_details->working_type, ['Office Work', 'Local Market Visit', 'Tour', /* baaki sab */])) {
+//     Log::info("Present found for user: {$item->id}, date: {$check}, working_type: {$attendance_details->working_type}");
+//     $label_data[] = 'P';
+//     $total_p++;
+// }
+//       //neww
+
+//       $sundayPunchinCount = CompOffLeave::where('comp_off_date', '>=', $last60Days)->where('is_used', false)
+//         ->where('user_id', $item->id)
+//         ->sum('balance');
+
+//       $label_data[] = $item->leave_balance ?? '0';
+//       $label_data[] = $sundayPunchinCount > 0 ? $sundayPunchinCount : '0';
+//       $label_data[] = (string)$total_wo;
+//       $label_data[] = (string)$total_a;
+//       $label_data[] = (string)$total_lop;
+//       $label_data[] = (string)$total_al;
+//       $label_data[] = (string)$total_con;
+//       $label_data[] = (string)$total_co;
+//       $label_data[] = (string)$total_mis;
+//       $label_data[] = (string)$total_pw;
+//       $label_data[] = (string)$total_h;
+//       $label_data[] = (string)$total_hd;
+//       $label_data[] = (string)$total_hdal;
+//       $label_data[] = (string)$total_p;
+//       $label_data[] = (string)$total_pn;
+//       $label_data[] = $total_wo + $total_al + $total_pw + $total_h + $total_hdal + $total_p;
+//       $label_data[] = (string)$total_atte;
+
+//       $return =  [
+//         $item->id ?? '',
+//         $item->employee_codes ?? '',
+//         $item->name ?? '',
+//         $item->getbranch->branch_name ?? '',
+//         $item->getdivision->division_name ?? '',
+//         $item->getdesignation->designation_name ?? '',
+//         $item->userinfo ? date('d M Y', strtotime($item->userinfo->date_of_joining)) : '-',
+//       ];
+
+//       return  $option_array = array_merge($return, $label_data);
+//     })->toArray();
+
+
+//     $start_date = $request->start_date;   // e.g. "2025-04-01"
+//     $end_date   = $request->end_date;     // e.g. "2026-03-31"
+
+
+//     $label1 = [
+//       'User Id',
+//       'Employee Code',
+//       'User Name',
+//       'Branch',
+//       'Division',
+//       'Designation',
+//       'DOJ',
+//     ];
+
+//     $label3 = [
+//       'Leave Balance',
+//       'Comp Leave Balance',
+//       'Week Of (W/o)',
+//       'Absent (A)',
+//       'LOP',
+//       'AL',
+//       'Comp Off NP',
+//       'Comp Off A',
+//       'MIS Punch (MIS)',
+//       'Present Week of (PW)',
+//       'Holiday (H)',
+//       'Half Day (1/2P+1/2LOP)',
+//       'Half Day (1/2P+1/AL)',
+//       'Present (P)',
+//       'Present Not Approve (PN)',
+//       'Paid Days',
+//       'TOTAL Days',
+//     ];
+
+//     $headings = array_merge($label1, $label2, $label3);
+    
+
+//     // $export = new ExcelExport($label, $data);
+//   return Excel::download(
+//         new attendanceSummaryDownload ($headings, $data, $start_date, $end_date),
+//         'attendance-summary-' . date('Y-m-d') . '.xlsx'
+//     );
+//   }
+
+public function attendanceSummaryDownload(Request $request)
+{
+    $start_date   = $request->start_date;
+    $end_date     = $request->end_date;
     $executive_id = $request->executive_id;
-    $end_date = date('Y-m-d', strtotime($end_date . "+1 days"));
+
+    // If no date range is provided → use current month
+    if (empty($start_date) && empty($end_date)) {
+        $now = Carbon::now();
+        $start_date = $now->startOfMonth()->format('Y-m-d');
+        $end_date   = $now->endOfMonth()->format('Y-m-d');
+    }
+
+    // Prepare period (end date is exclusive → +1 day)
+    $end_date_for_period = Carbon::parse($end_date)->addDay()->format('Y-m-d');
 
     $period = new DatePeriod(
-      new DateTime($start_date),
-      new DateInterval('P1D'),
-      new DateTime($end_date)
+        new DateTime($start_date),
+        new DateInterval('P1D'),
+        new DateTime($end_date_for_period)
     );
 
     $last60Days = Carbon::now()->subDays(60);
 
+    // Build users query
+    $attendancesummary = User::with(['attendance_details', 'createdbyname', 'getbranch', 'userinfo'])
+        ->where('active', 'Y')
+        ->whereDoesntHave('roles', function ($query) {
+            $query->whereIn('id', config('constants.customer_roles'));
+        })
+        ->where('show_attandance_report', '1');
 
-
-    $attendancesummary = User::with(['attendance_details', 'createdbyname', 'getbranch', 'userinfo'])->where('active', 'Y')->whereDoesntHave('roles', function ($query) {
-      $query->whereIn('id', config('constants.customer_roles'));
-    })->where('show_attandance_report', '1');
     if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
-      $attendancesummary = $attendancesummary->whereIn('id', getUsersReportingToAuth());
+        $attendancesummary->whereIn('id', getUsersReportingToAuth());
     }
 
     if ($executive_id) {
-      $attendancesummary = $attendancesummary->where('id', $executive_id);
+        $attendancesummary->where('id', $executive_id);
     }
 
-    $attendancesummary = $attendancesummary->limit(4500)->get();
+    $users = $attendancesummary->limit(4500)->get();
 
-    $date1 = $start_date;
-    $date2 = $end_date;
-
-
+    // Build date labels
     $label2 = [];
-
-    //new
-
-    foreach ($period as $key => $value) {
-
-      $label2[] =  $value->format('j-M-Y');
-      $like_date =  $value->format('j-M-Y');
+    foreach ($period as $date) {
+        $label2[] = $date->format('j-M-Y');
     }
 
-
-    $data = $attendancesummary->map(function ($item, $key) use ($label2, $date1, $date2, $period, $last60Days) {
-
-
-      //neww
-      $label_data = [];
-      $total_wo = 0;
-      $total_a = 0;
-      $total_lop = 0;
-      $total_mis = 0;
-      $total_pw = 0;
-      $total_h = 0;
-      $total_hd = 0;
-      $total_p = 0;
-      $total_pn = 0;
-      $total_atte = 0;
-      $total_al = 0;
-      $total_hdal = 0;
-      $total_co = 0;
-      $total_con = 0;
-
-      foreach ($period as $key => $value) {
-        $like_date =  $value->format('j-M-Y');
-        $total_atte++;
-        $check = $value->format('Y-m-d');
-
-        //last new
-
-        $attendance_details = Attendance::where(['user_id' => $item->id])->where('punchin_date', 'like', $check . '%')->first();
-
-
-        ///nnn
-
-        $userId = $item->id;
-        $branchId = $item->branch_id;
-        $holiday_detail = Holiday::where('branch', $branchId)->get();
-        $holiday_dates = $holiday_detail->pluck('holiday_date')->toArray(); // Extract holiday_date values
-        $check_date_attendance = explode(',', implode(',', $holiday_dates));
-
-        if (in_array($check, $check_date_attendance)) {
-          $label_data[] = 'H';
-          $total_h++;
-        } else {
-
-
-          ///nnn  
-
-          $dayname = date('l', strtotime($check));
-
-          if (!empty($attendance_details)) {
-
-            if ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave' || $attendance_details->working_type == 'Full Day Leave' || $attendance_details->working_type == 'Leave') {
-              $leaveExists = Leave::where('user_id', $attendance_details->user_id)
-                ->whereDate('from_date', '<=', $attendance_details->punchin_date)
-                ->whereDate('to_date', '>=', $attendance_details->punchin_date)
-                ->first();
-            }
-
-            if ($attendance_details->attendance_status == '1') {
-              if ($attendance_details->working_type == 'Leave' || $attendance_details->working_type == 'Full Day Leave') {
-                if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
-                  $label_data[] =  'Comp Off';
-                  $total_co++;
-                } else {
-                  $label_data[] =  'AL';
-                  $total_al++;
-                }
-              } elseif ($dayname == 'Sunday') {
-                $label_data[] =  'PW';
-                $total_pw++;
-              } elseif ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave') {
-                if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
-                  $label_data[] =  '1/2P+1/2Comp Off';
-                  $total_co++;
-                } else {
-                  $label_data[] =  '1/2P+1/2AL';
-                  $total_hdal++;
-                }
-              } elseif ($attendance_details->working_type == 'Local Market Visit') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Office Work') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Office Meeting') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Scouting for market') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Plumber Meet') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Retailer Meet') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Service Center Visit') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Tour') {
-                $label_data[] =  'P';
-                $total_p++;
-              } elseif ($attendance_details->working_type == 'Holiday') {
-                $label_data[] = 'H';
-                $total_h++;
-              }
-            } else if ($attendance_details->attendance_status == '2') {
-              if ($attendance_details->working_type == 'Full Day Leave' || $attendance_details->working_type == 'Leave') {
-                if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
-                  $label_data[] =  'Comp Off N';
-                  $total_con++;
-                } else {
-                  $label_data[] =  'LOPN';
-                  $total_lop++;
-                }
-              } elseif ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave') {
-                if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
-                  $label_data[] =  '1/2P+1/2Comp Off N';
-                  $total_con++;
-                } else {
-                  $label_data[] =  '1/2P+1/2LOPN';
-                  $total_hd++;
-                }
-              } else {
-                $label_data[] = 'A';
-                $total_a++;
-              }
-            } else {
-              if ($attendance_details->working_type == 'Full Day Leave' || $attendance_details->working_type == 'Leave') {
-
-                if (($leaveExists->bal_type ?? null) == 'Comp-off Balance') {
-                  $label_data[] =  'Comp Off N';
-                  $total_con++;
-                } else {
-                  $label_data[] =  'LOPN';
-                  $total_lop++;
-                }
-              } elseif ($attendance_details->working_type == 'Second Half Leave' || $attendance_details->working_type == 'First Half Leave') {
-                if ($leaveExists->bal_type == 'Comp-off Balance') {
-                  $label_data[] =  '1/2P+1/2Comp Off N';
-                  $total_con++;
-                } else {
-                  $label_data[] =  '1/2P+1/2LOPN';
-                  $total_hd++;
-                }
-              } else {
-                $label_data[] = 'PN';
-                $total_pn++;
-              }
-            }
-          } else {
-            $date_of_joining_object = new DateTime($item->userinfo->date_of_joining ?? '');
-
-            if ($dayname == 'Sunday') {
-              if ($date_of_joining_object <= $value) {
-                $label_data[] = 'W/o';
-                $total_wo++;
-              } else {
-                $label_data[] = '-';
-              }
-            } else {
-              if ($date_of_joining_object <= $value) {
-                $label_data[] = 'MIS';
-                $total_mis++;
-              } else {
-                $label_data[] = '-';
-              }
-            }
-          }
-        }
-      }
-
-
-      if ($attendance_details && $attendance_details->attendance_status == '1' && in_array($attendance_details->working_type, ['Office Work', 'Local Market Visit', 'Tour', /* baaki sab */])) {
-    Log::info("Present found for user: {$item->id}, date: {$check}, working_type: {$attendance_details->working_type}");
-    $label_data[] = 'P';
-    $total_p++;
-}
-      //neww
-
-      $sundayPunchinCount = CompOffLeave::where('comp_off_date', '>=', $last60Days)->where('is_used', false)
-        ->where('user_id', $item->id)
-        ->sum('balance');
-
-      $label_data[] = $item->leave_balance ?? '0';
-      $label_data[] = $sundayPunchinCount > 0 ? $sundayPunchinCount : '0';
-      $label_data[] = (string)$total_wo;
-      $label_data[] = (string)$total_a;
-      $label_data[] = (string)$total_lop;
-      $label_data[] = (string)$total_al;
-      $label_data[] = (string)$total_con;
-      $label_data[] = (string)$total_co;
-      $label_data[] = (string)$total_mis;
-      $label_data[] = (string)$total_pw;
-      $label_data[] = (string)$total_h;
-      $label_data[] = (string)$total_hd;
-      $label_data[] = (string)$total_hdal;
-      $label_data[] = (string)$total_p;
-      $label_data[] = (string)$total_pn;
-      $label_data[] = $total_wo + $total_al + $total_pw + $total_h + $total_hdal + $total_p;
-      $label_data[] = (string)$total_atte;
-
-      $return =  [
-        $item->id ?? '',
-        $item->employee_codes ?? '',
-        $item->name ?? '',
-        $item->getbranch->branch_name ?? '',
-        $item->getdivision->division_name ?? '',
-        $item->getdesignation->designation_name ?? '',
-        $item->userinfo ? date('d M Y', strtotime($item->userinfo->date_of_joining)) : '-',
-      ];
-
-      return  $option_array = array_merge($return, $label_data);
-    })->toArray();
-
-
+    // Prepare column headings
     $label1 = [
-      'User Id',
-      'Employee Code',
-      'User Name',
-      'Branch',
-      'Division',
-      'Designation',
-      'DOJ',
+        'User Id',
+        'Employee Code',
+        'User Name',
     ];
 
     $label3 = [
-      'Leave Balance',
-      'Comp Leave Balance',
-      'Week Of (W/o)',
-      'Absent (A)',
-      'LOP',
-      'AL',
-      'Comp Off NP',
-      'Comp Off A',
-      'MIS Punch (MIS)',
-      'Present Week of (PW)',
-      'Holiday (H)',
-      'Half Day (1/2P+1/2LOP)',
-      'Half Day (1/2P+1/AL)',
-      'Present (P)',
-      'Present Not Approve (PN)',
-      'Paid Days',
-      'TOTAL Days',
+        // 'Leave Balance',
+        'Comp Leave Balance',
+        'Week Off (W/o)',
+        'Absent (A)',
+        // 'LOP',
+        // 'AL',
+        // 'Comp Off NP',
+        // 'Comp Off A',
+        // 'MIS Punch (MIS)',
+        // 'Present Week of (PW)',
+        'Holiday (H)',
+        // 'Half Day (1/2P+1/2LOP)',
+        // 'Half Day (1/2P+1/AL)',
+        'Present (P)',
+        // 'Present Not Approve (PN)',
+        // 'Paid Days',
+        'TOTAL Days',
     ];
 
-    $label = array_merge($label1, $label2, $label3);
-    
+    $headings = array_merge($label1, $label2, $label3);
 
-    $export = new ExcelExport($label, $data);
+    // Generate data rows
+    $data = $users->map(function ($user) use ($period, $last60Days) {
+        $row = [];
+        $totals = [
+            'wo' => 0, 'a' => 0, 'lop' => 0, 'mis' => 0, 'pw' => 0,
+            'h' => 0, 'hd' => 0, 'p' => 0, 'pn' => 0, 'atte' => 0,
+            'al' => 0, 'hdal' => 0, 'co' => 0, 'con' => 0,
+        ];
 
-    return Excel::download($export, $filename);
-  }
+        // Pre-fetch holidays once per user
+        $holidays = Holiday::where('branch', $user->branch_id)
+            ->pluck('holiday_date')
+            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+            ->toArray();
 
+        foreach ($period as $date) {
+            $totals['atte']++;
+            $ymd = $date->format('Y-m-d');
+            $dayName = $date->format('l');
 
+            $attendance = Attendance::where('user_id', $user->id)
+                ->where('punchin_date', 'like', $ymd . '%')
+                ->first();
+
+            if (in_array($ymd, $holidays)) {
+                $row[] = 'H';
+                $totals['h']++;
+                continue;
+            }
+
+            if ($attendance) {
+    $status = (int) $attendance->attendance_status;
+    $workingType = $attendance->working_type ?? '';
+    $leaveExists = null;
+
+    // Check for leave only when needed
+    if (in_array($workingType, ['Second Half Leave', 'First Half Leave', 'Full Day Leave', 'Leave'])) {
+        $leaveExists = Leave::where('user_id', $user->id)
+            ->whereDate('from_date', '<=', $attendance->punchin_date)
+            ->whereDate('to_date', '>=', $attendance->punchin_date)
+            ->first();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Status 0 or 1 → both treated as Present (P) unless special leave
+    // ────────────────────────────────────────────────────────────────
+    if ($status === 0 || $status === 1) {
+        // Special leave types still override to AL / Comp Off / etc.
+        if (in_array($workingType, ['Leave', 'Full Day Leave'])) {
+            if (($leaveExists?->bal_type ?? '') === 'Comp-off Balance') {
+                $row[] = 'Comp Off';
+                $totals['co']++;
+            } else {
+                $row[] = 'AL';
+                $totals['al']++;
+            }
+        } elseif (in_array($workingType, ['Second Half Leave', 'First Half Leave'])) {
+            if (($leaveExists?->bal_type ?? '') === 'Comp-off Balance') {
+                $row[] = '1/2P+1/2Comp Off';
+                $totals['co']++;
+            } else {
+                $row[] = '1/2P+1/2AL';
+                $totals['hdal']++;
+            }
+        } elseif ($workingType === 'Holiday') {
+            $row[] = 'H';
+            $totals['h']++;
+        } else {
+            // All other approved / pending cases → P
+            $row[] = 'P';
+            $totals['p']++;
+        }
+    }
+    // ────────────────────────────────────────────────────────────────
+    // Rejected (status = 2)
+    // ────────────────────────────────────────────────────────────────
+    elseif ($status === 2) {
+        if (in_array($workingType, ['Full Day Leave', 'Leave'])) {
+            if (($leaveExists?->bal_type ?? '') === 'Comp-off Balance') {
+                $row[] = 'Comp Off N';
+                $totals['con']++;
+            } else {
+                $row[] = 'LOPN';
+                $totals['lop']++;
+            }
+        } elseif (in_array($workingType, ['Second Half Leave', 'First Half Leave'])) {
+            if (($leaveExists?->bal_type ?? '') === 'Comp-off Balance') {
+                $row[] = '1/2P+1/2Comp Off N';
+                $totals['con']++;
+            } else {
+                $row[] = '1/2P+1/2LOPN';
+                $totals['hd']++;
+            }
+        } else {
+            $row[] = 'A';
+            $totals['a']++;
+        }
+    }
+    // Unknown / other status
+    else {
+        $row[] = 'PN';
+        $totals['pn']++;
+    }
+} else {
+                // No attendance record
+                $doj = $user->userinfo ? new DateTime($user->userinfo->date_of_joining) : null;
+
+                if ($dayName === 'Sunday') {
+                    if ($doj && $doj <= $date) {
+                        $row[] = 'SUNDAY';
+                        $totals['wo']++;
+                    } else {
+                        $row[] = '-';
+                    }
+                } else {
+                    if ($doj && $doj <= $date) {
+                        $row[] = '-';
+                        $totals['mis']++;
+                    } else {
+                        $row[] = '-';
+                    }
+                }
+            }
+        }
+
+        // Comp-off logic (outside the date loop)
+        $sundayPunchinCount = CompOffLeave::where('comp_off_date', '>=', $last60Days)
+            ->where('is_used', false)
+            ->where('user_id', $user->id)
+            ->sum('balance');
+        // removed: lop, al, con, co, mis, pw, hdal, hd, pn, paid days
+        // Add summary columns
+        // $row[] = $user->leave_balance ?? '0';
+        $row[] = $sundayPunchinCount > 0 ? $sundayPunchinCount : '0';
+        // $row[] = (string) $totals['wo'];
+        $row[] = (string) $totals['a'];
+        // $row[] = (string) $totals['lop'];
+        // $row[] = (string) $totals['al'];
+        // $row[] = (string) $totals['con'];
+        // $row[] = (string) $totals['co'];
+        // $row[] = (string) $totals['mis'];
+        // $row[] = (string) $totals['pw'];
+        $row[] = (string) $totals['h'];
+        // $row[] = (string) $totals['hd'];
+        // $row[] = (string) $totals['hdal'];
+        $row[] = (string) $totals['p'];
+        // $row[] = (string) $totals['pn'];
+        $row[] = $totals['wo'] + $totals['al'] + $totals['pw'] + $totals['h'] + $totals['hdal'] + $totals['p'];
+        $row[] = (string) $totals['atte'];
+
+        // Basic user info columns
+        $basic = [
+            $user->id ?? '',
+            $user->employee_codes ?? '',
+            $user->name ?? '',
+        
+        ];
+
+        return array_merge($basic, $row);
+    })->toArray();
+
+   $holidays = Holiday::whereBetween('holiday_date', [$start_date, $end_date])
+    ->pluck('holiday_date')
+    ->flatMap(function ($dateString) {
+        // Split comma-separated dates, trim whitespace, parse each one
+        return collect(explode(',', $dateString))
+            ->map(fn($d) => trim($d))
+            ->filter() // remove empty entries
+            ->map(function ($singleDate) {
+                try {
+                    return Carbon::parse($singleDate)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    // Log bad date if you want
+                    // Log::warning("Invalid holiday date: $singleDate");
+                    return null;
+                }
+            })
+            ->filter(); // remove failed parses
+    })
+    ->unique()
+    ->values()
+    ->toArray();
+
+    // Export
+    return Excel::download(
+        new attendanceSummaryDownload($headings, $data, $start_date, $end_date, $holidays),
+        'attendance-summary-' . date('Y-m-d') . '.xlsx'
+    );
+}
 
 
 
@@ -430,6 +725,14 @@ class AttendanceController extends Controller
     $branchIds = explode(',', $user->branch_id);
 
     $punchinDate = Carbon::parse($request['punchin_date'])->format('Y-m-d');
+    // dd([
+    //     'user_id'          => $request['user_id'],
+    //     'punchin_date'     => $request['punchin_date'],
+    //     'punchin_time_raw' => $request['punchin_date'],           // full datetime from request
+    //     'calculated_time'  => date('G:i', strtotime($request['punchin_date'])),  // what will be saved
+    //     'current_server_time' => date('H:i:s'),
+    //     'request_all'      => $request->all(),
+    // ]);
     $isSunday = Carbon::parse($request['punchin_date'])->isSunday();
     $holidayDates = Holiday::whereIn('branch', $branchIds)
       ->pluck('holiday_date')
@@ -457,7 +760,10 @@ class AttendanceController extends Controller
       'user_id' => $request['user_id'],
       'active' => 'Y',
       'punchin_date' => date('Y-m-d', strtotime($request['punchin_date'])),
-      'punchin_time' => date('G:i', strtotime($request['punchin_date'])),
+      // 'punchin_time' => date('G:i', strtotime($request['punchin_date'])),
+      'punchin_time' => !empty($request['punchin_time'])
+    ? date('H:i', strtotime($request['punchin_time']))
+    : date('H:i'),
       'punchin_summary' => !empty($request['punchin_summary']) ? $request['punchin_summary'] : '',
       'punchin_address' => !empty($addressP) ? $addressP : '',
       'working_type' => !empty($request['working_type']) ? $request['working_type'] : '',
@@ -525,6 +831,7 @@ $holidayDates = Holiday::whereIn('branch', $branchIds)
     ->toArray();
 
 $isHoliday = in_array($todayDate, $holidayDates);
+
 
 if (!$joiningDate) {
     dd('Joining date missing');
@@ -711,7 +1018,11 @@ if (
 
       return Redirect::to('reports/attendancereport')->with('message_success', 'PunchIn Successfully');
     }
-
+dd(
+    'Punch-in time for ' . $user->name,
+    $attendance ? $attendance->punchin_time : 'No punch-in record',
+    $attendance ? $attendance->toArray() : 'No record found'
+);
     return redirect()->back()->with('message_danger', 'Error in Lead Stages')->withInput();
     // } catch (\Exception $e) {
     //   return redirect()->back()->withErrors($e->getMessage())->withInput();
@@ -834,4 +1145,5 @@ if (
       return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
   }
+  
 }

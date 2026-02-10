@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use DateTime;
 use Carbon\Carbon;
-
+use App\Exports\LeavesExport;
+use Maatwebsite\Excel\Facades\Excel;
 class LeaveController extends Controller
 {
     /**
@@ -592,4 +593,50 @@ class LeaveController extends Controller
         ]);
         return redirect()->route('leaves.index')->with('message_success', 'A comp-off date added for this user.')->withInput();
     }
+public function export(Request $request)
+{
+    try {
+        $filters = [
+            'executive_id' => $request->get('executive_id'),
+            'start_date'   => $request->get('start_date'),
+            'end_date'     => $request->get('end_date'),
+        ];
+
+        $today = Carbon::today();
+
+        // If no date range is selected → use last 60 days
+        if (empty($filters['start_date']) || empty($filters['end_date'])) {
+            $filters['start_date'] = $today->copy()->subDays(60)->format('Y-m-d');
+            $filters['end_date']   = $today->format('Y-m-d');
+        } else {
+            // Validate and fix if start date is after end date
+            $start = Carbon::parse($filters['start_date']);
+            $end   = Carbon::parse($filters['end_date']);
+
+            if ($start->gt($end)) {
+                $filters['start_date'] = $end->format('Y-m-d');
+                $filters['end_date']   = $start->format('Y-m-d');
+            }
+        }
+
+        // Generate meaningful filename
+        $filename = 'Leaves_Report_' . $filters['start_date'] . '_to_' . $filters['end_date'] . '.xlsx';
+
+        return Excel::download(
+            new LeavesExport($filters),
+            $filename
+        );
+
+    } catch (\Exception $e) {
+        // This will show real error instead of blank screen
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to generate Excel file',
+            'error'   => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+        ], 500);
+    }
+}
+    
 }

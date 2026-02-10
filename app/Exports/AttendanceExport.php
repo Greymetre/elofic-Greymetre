@@ -64,9 +64,17 @@ class AttendanceExport implements FromCollection, WithHeadings, ShouldAutoSize, 
     public function headings(): array
     {
         if (Auth::user()->hasRole('superadmin') || Auth::user()->hasRole('Admin')) {
-            return ['id', 'Employee Code', 'user_id', 'Designation', 'Branch', 'Division', 'punchin_date', 'punchin_time', 'punchout_time', 'worked_time', 'Working Type', 'Attendance Status', 'Remark Status', 'punchin_address', 'punchout_address', 'punchin_summary', 'punchin_longitude', 'punchin_latitude', 'punchout_longitude', 'punchout_latitude', 'From', 'Approve/Reject By'];
+            return ['id', 'Employee Code', 'Employee Name', 'Designation', 'Zone',
+            //  'Division', 
+             'Punchin Date', 'Punchin Time', 'Punchout Time', 'Worked Time', 'Working Type', 'Attendance Status', 'Remark Status', 'Punchin Address', 'Punchout Address', 'Punchin Summary',
+            //  'punchin_longitude', 'punchin_latitude', 'punchout_longitude', 'punchout_latitude', 
+             'From', 'Approve/Reject By'];
         } else {
-            return ['id', 'Employee Code', 'user_id', 'Designation', 'Branch', 'Division', 'punchin_date', 'punchin_time', 'punchout_time', 'worked_time', 'Working Type', 'Attendance Status', 'Remark Status', 'punchin_address', 'punchout_address', 'punchin_summary', 'punchin_longitude', 'punchin_latitude', 'punchout_longitude', 'punchout_latitude'];
+            return ['id', 'Employee Code', 'Employee Name', 'Designation', 'Zone',
+            //  'Division', 
+             'Punchin Date', 'Punchin Time', 'Punchout Time', 'Worked Time', 'Working Type', 'Attendance Status', 'Remark Status', 'Punchin Address', 'Punchout Address', 'Punchin Summary',
+            //  'punchin_longitude', 'punchin_latitude', 'punchout_longitude', 'punchout_latitude'
+             ];
         }
     }
 
@@ -92,7 +100,7 @@ class AttendanceExport implements FromCollection, WithHeadings, ShouldAutoSize, 
                 isset($data['users']['name']) ? $data['users']['name'] : '',
                 isset($data['users']['getdesignation']['designation_name']) ? $data['users']['getdesignation']['designation_name'] : '',
                 isset($data['users']['getbranch']['branch_name']) ? $data['users']['getbranch']['branch_name'] : '',
-                isset($data['users']['getdivision']['division_name']) ? $data['users']['getdivision']['division_name'] : '',
+                // isset($data['users']['getdivision']['division_name']) ? $data['users']['getdivision']['division_name'] : '',
 
                 $data['punchin_date'],
                 $data['punchin_time'],
@@ -106,10 +114,10 @@ class AttendanceExport implements FromCollection, WithHeadings, ShouldAutoSize, 
 
                 $data['punchout_address'],
                 $data['punchin_summary'],
-                isset($data['punchin_longitude']) ? $data['punchin_longitude'] : '',
-                isset($data['punchin_latitude']) ? $data['punchin_latitude'] : '',
-                isset($data['punchout_longitude']) ? $data['punchout_longitude'] : '',
-                isset($data['punchout_latitude']) ? $data['punchout_latitude'] : '',
+                // isset($data['punchin_longitude']) ? $data['punchin_longitude'] : '',
+                // isset($data['punchin_latitude']) ? $data['punchin_latitude'] : '',
+                // isset($data['punchout_longitude']) ? $data['punchout_longitude'] : '',
+                // isset($data['punchout_latitude']) ? $data['punchout_latitude'] : '',
                 $data['punchin_from'],
                 isset($data['approveReject']) ? $data['approveReject']['name'] : '',
             ];
@@ -134,10 +142,10 @@ class AttendanceExport implements FromCollection, WithHeadings, ShouldAutoSize, 
 
                 $data['punchout_address'],
                 $data['punchin_summary'],
-                isset($data['punchin_longitude']) ? $data['punchin_longitude'] : '',
-                isset($data['punchin_latitude']) ? $data['punchin_latitude'] : '',
-                isset($data['punchout_longitude']) ? $data['punchout_longitude'] : '',
-                isset($data['punchout_latitude']) ? $data['punchout_latitude'] : '',
+                // isset($data['punchin_longitude']) ? $data['punchin_longitude'] : '',
+                // isset($data['punchin_latitude']) ? $data['punchin_latitude'] : '',
+                // isset($data['punchout_longitude']) ? $data['punchout_longitude'] : '',
+                // isset($data['punchout_latitude']) ? $data['punchout_latitude'] : '',
 
             ];
         }

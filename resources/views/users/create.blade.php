@@ -1090,7 +1090,7 @@
                     </div>
                   </div>
                 </div>
-                <!-- <div class="col-md-6">
+           <div class="col-md-6">
                   <div class="input_section">
                     <label class="col-form-label">{!! trans('panel.user.branch_name') !!}</label>
                     <div class="form-group has-default bmd-form-group">
@@ -1120,7 +1120,7 @@
                       @endif
                     </div>
                   </div>
-                </div> -->
+                </div> 
                 <div class="col-md-6">
                   <div class="input_section">
                     <label class="col-form-label">Primary {!! trans('panel.user.branch_name') !!}</label>

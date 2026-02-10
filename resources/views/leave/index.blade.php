@@ -29,7 +29,7 @@
             <span class="">
               <div class="btn-group header-frm-btn">
                 @if(auth()->user()->can(['attendance_download']))
-                <!-- <form method="GET" action="{{ URL::to('attendance-download') }}">
+                <form method="GET" action="{{ URL::to('leaves-export') }}">
                   <div class="d-flex flex-row">
 
                     <div class="p-2" style="width: 250px;">
@@ -66,9 +66,18 @@
                       </button>
                     </div>
                   </div>
-                </form> -->
+                </form>
                 @endif
                 <div class="next-btn">
+   <!-- <div class="p-2">
+    <a href="{{ route('leaves.export') }}?executive_id={{ old('executive_id') }}&start_date={{ old('start_date') }}&end_date={{ old('end_date') }}"
+       class="btn btn-just-icon btn-theme" title="Download Leaves Report">
+        <i class="material-icons">cloud_download</i> Leaves Excel
+    </a>
+</div> -->
+
+  
+
                   @if(auth()->user()->can(['leave_create']))
                   <a data-toggle="modal" data-target="#submitLeave" class="custom-btn create" title="Punch In">
                     Add Leave
@@ -130,8 +139,10 @@
             <table id="getattendance" class="table table-striped- table-bordered table-hover table-checkable responsive no-wrap">
               <thead class=" text-primary">
                 <th>No</th>
+                
                 <th>User ID</th>
                 <th>Status</th>
+                <th>Employee Code</th>
                 <th>User Name</th>
                 <th>From Date</th>
                 <th>To Address</th>
@@ -490,6 +501,7 @@
             orderable: false,
             searchable: false
           },
+      
           {
             data: 'user_id',
             name: 'user_id',
@@ -502,6 +514,11 @@
             orderable: false,
             searchable: false
           },
+              { 
+        data: 'users.employee_codes',     // ← important: adjust according to your relation
+        name: 'users.employee_codes',
+        defaultContent: '-'
+    },
           {
             data: 'users.name',
             name: 'users.name',

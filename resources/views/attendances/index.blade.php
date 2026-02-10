@@ -31,6 +31,7 @@
             <table id="getattendance" class="table table-striped- table-bordered table-hover table-checkable responsive no-wrap">
               <thead class=" text-primary">
                 <th>{!! trans('panel.global.no') !!}</th>
+                <!-- <th>Employee Code</th> -->
                 <th>{!! trans('panel.global.users') !!}</th>
                 <th>{!! trans('panel.attendance.punchin_date') !!}</th>
                 <th>{!! trans('panel.attendance.worked_time') !!}</th>
@@ -65,6 +66,11 @@ $(document).ready(function() {
         "ajax": "{{ route('attendances.index') }}",
         "columns": [
             {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+    //               { 
+    //     data: 'users.employee_codes',     // ← important: adjust according to your relation
+    //     name: 'users.employee_codes',
+    //     defaultContent: '-'
+    // },
             {data: 'users.name', name: 'users.name',"defaultContent": ''},
             {data: 'punchin_date', name: 'punchin_date',"defaultContent": ''},
             {data: 'worked_time', name: 'worked_time',"defaultContent": ''},

@@ -873,6 +873,7 @@ Route::name('workshops.')->prefix('workshops')->group(function () {
     Route::any('leaveapproval', [LeaveController::class, 'leaveApproval'])->name('leaves.approval');
     Route::any('leaverejected', [LeaveController::class, 'leaveRejected'])->name('leaves.rejected');
     Route::post('combo-off-leave', [LeaveController::class, 'comboOffLeave'])->name('comboOffLeave');
+    Route::any('leaves-export', [LeaveController::class, 'export'])->name('leaves.export');
     /*============= Team ====================*/
     Route::resource('teams', TeamController::class);
     /*============= Holiday ====================*/

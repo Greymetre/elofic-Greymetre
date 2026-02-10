@@ -138,6 +138,7 @@
                 <th>#</th>
                 <th>User ID</th>
                 <th>Status</th>
+                <th>Employee Code</th>
                 <th>User Name</th>
                 <th>Punch in Date</th>
                 <th>Punch In Time</th>
@@ -361,6 +362,11 @@
           searchable: false
         },
         {
+        data: 'users.employee_codes',           // ← NEW
+        name: 'users.employee_codes',
+        "defaultContent": '-'
+    },
+        {
           data: 'users.name',
           name: 'users.name',
           "defaultContent": '',
@@ -445,6 +451,8 @@
         },
       ];
 
+      
+
       if (isSuperAdmin) {
         columns.push({
           data: 'punchin_from',
@@ -482,6 +490,7 @@
         columns: columns
 
       });
+      
 
       $('#division_id').change(function() {
         table.draw();
@@ -848,4 +857,5 @@
 
 
   </script>
+  
 </x-app-layout>

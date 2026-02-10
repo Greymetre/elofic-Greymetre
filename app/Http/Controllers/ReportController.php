@@ -410,6 +410,7 @@ class ReportController extends Controller
         foreach ($all_user_details as $k => $val) {
             $users[$k]['id'] = $val->id;
             $users[$k]['name'] = $val->name;
+            $users[$k]['employee_codes'] = $val->employee_codes;
         }
         if ($search_branches && count($search_branches) > 0 && $search_branches[0] != null) {
             if ($request->ajax()) {
@@ -418,7 +419,7 @@ class ReportController extends Controller
             }
         }
         if ($request->ajax()) {
-            $data = Attendance::with('users:id,name')
+            $data = Attendance::with('users:id,name,employee_codes')
                 ->where(function ($query) use ($request, $all_reporting_user_ids) {
                     if (!empty($request['executive_id'])) {
                         $query->where('user_id', $request['executive_id']);
@@ -467,6 +468,10 @@ class ReportController extends Controller
                 })
                 ->select('id', 'user_id', 'punchin_date', 'punchin_time', 'punchin_longitude', 'punchin_latitude', 'punchin_address', 'punchin_image', 'punchout_date', 'punchout_time', 'punchout_latitude', 'punchout_longitude', 'punchout_address', 'punchout_image', 'worked_time', 'punchin_summary', 'punchout_summary', 'working_type', 'attendance_status', 'remark_status', 'punchin_from')
                 ->latest();
+
+                
+                
+                
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('checkbox', function ($data) {
@@ -569,6 +574,8 @@ class ReportController extends Controller
                 ->rawColumns(['punchin', 'punchout', 'action', 'action_status', 'current_status', 'punchin_from', 'checkbox'])
                 ->make(true);
         }
+
+        
         $divisions = Division::latest()->get();
         return view('reports.attendancereport', compact('users', 'branches', 'divisions'));
     }
@@ -671,6 +678,9 @@ class ReportController extends Controller
                 })
                 ->select('id', 'user_id', 'punchin_date', 'punchin_time', 'punchin_longitude', 'punchin_latitude', 'punchin_address', 'punchin_image', 'punchout_date', 'punchout_time', 'punchout_latitude', 'punchout_longitude', 'punchout_address', 'punchout_image', 'worked_time', 'punchin_summary', 'punchout_summary', 'working_type', 'attendance_status', 'remark_status')
                 ->latest();
+
+                dd($data->get()->groupBy('users.name')->map->pluck('punchin_time', 'punchin_date'));
+                
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->editColumn('punchin_date', function ($data) {

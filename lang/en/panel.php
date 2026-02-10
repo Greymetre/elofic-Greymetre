@@ -1146,10 +1146,10 @@ return [
     ],
     'brand'           => [
         'title'          => 'Brands',
-        'title_singular' => 'Brand',
+        'title_singular' => 'Makers',
         'fields'         => [
             'id'                       => 'ID',
-            'brand_name'        => 'Brand Name',
+            'brand_name'        => 'Makers Name',
             'brand_image'        => 'Image',
         ],
     ],
@@ -1217,10 +1217,10 @@ return [
     ],
     'subcategory'           => [
         'title'          => 'Sub Categories',
-        'title_singular' => 'Sub Category',
+        'title_singular' => 'Segment',
         'fields'         => [
             'id'                       => 'ID',
-            'subcategory_name'        => 'Sub Category Name',
+            'subcategory_name'        => 'Segment Name',
             'subcategory_image'        => 'Image',
             'category'        => 'Category',
         ],
