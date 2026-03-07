@@ -106,7 +106,7 @@ class Beat extends Model
     }
     public function beatcustomers()
     {
-        return $this->hasMany('App\Models\BeatCustomer', 'beat_id', 'id')->select('id', 'beat_id', 'customer_id');
+        return $this->hasMany('App\Models\BeatCustomer', 'beat_id', 'id')->select('id', 'beat_id', 'distributor_id', 'customer_type');
     }
 
     public function beatusers()
@@ -122,4 +122,13 @@ class Beat extends Model
     {
         return $this->belongsTo('App\Models\State', 'state_id', 'id')->select('id', 'state_name');
     }
+    public function distributor()
+{
+    return $this->belongsTo(\App\Models\MasterDistributor::class, 'customer_id');
+}
+
+public function secondaryCustomer()
+{
+    return $this->belongsTo(\App\Models\SecondaryCustomer::class, 'customer_id');
+}
 }

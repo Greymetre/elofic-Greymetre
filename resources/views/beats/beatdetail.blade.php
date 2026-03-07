@@ -53,5 +53,27 @@ $(document).ready(function() {
         ]
     });
 });
+$(document).on('click', '.deleteSchedule', function () {
+
+    var url = $(this).data('url');
+
+    if(confirm("Are you sure you want to delete this schedule entry?")) {
+
+        $.ajax({
+            url: url,
+            type: "DELETE",
+            data: {
+                _token: "{{ csrf_token() }}"
+            },
+            success: function(response) {
+                $('#getbeat').DataTable().ajax.reload();
+                alert('Schedule Deleted Successfully');
+            },
+            error: function() {
+                alert('Delete failed');
+            }
+        });
+    }
+});
 </script>
 </x-app-layout>

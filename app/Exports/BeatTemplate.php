@@ -15,12 +15,16 @@ class BeatTemplate implements FromCollection,WithHeadings,ShouldAutoSize
 {
     public function collection()
     {
-        return Beat::select('beat_name','description','region_id','country_id','state_id','district_id','city_id')->limit(0)->get();   
+        return Beat::select('beat_name','description',
+        // 'region_id',
+        'country_id','state_id','district_id','city_id')->limit(0)->get();   
     }
 
     public function headings(): array
     {
-        return ['beat_name','description','region_id','country_id','state_id','district_id','city_id','userid','customers'];
+        return ['beat_name','description',
+        // 'region_id',
+        'country_id','state_id','district_id','city_id','userid','customers'];
     }
 
 }

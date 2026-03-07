@@ -293,29 +293,76 @@ class ReportController extends Controller
     {
         $userids = getUsersReportingToAuth();
         if ($request->ajax()) {
-            $data = CheckIn::with('users:id,name', 'customers:id,name,mobile', 'customers.customeraddress', 'beatschedules.beats', 'visitreports', 'orders_sum')
-                ->whereHas('users', function ($query) use ($userids, $request) {
-                    if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
-                        $query->whereIn('id', $userids);
-                    }
-                    if ($request->user_id && $request->user_id != null && $request->user_id != '') {
-                        $query->where('user_id', $request->user_id);
-                    }
-                    if ($request->division_id && $request->division_id != null && $request->division_id != '') {
-                        $query->where('division_id', $request->division_id);
-                    }
-                    if ($request->branch_id && $request->branch_id != null && $request->branch_id != '') {
-                        $query->where('branch_id', $request->branch_id);
-                    }
-                    if ($request->start_date && $request->start_date != null && $request->start_date != '' && $request->end_date && $request->end_date != null && $request->end_date != '') {
-                        $startDate = date('Y-m-d', strtotime($request->start_date));
-                        $endDate = date('Y-m-d', strtotime($request->end_date));
-                        $query->whereDate('checkin_date', '>=', $startDate)
-                            ->whereDate('checkin_date', '<=', $endDate);
-                    }
-                })
-                ->select('id', 'checkin_date', 'checkin_time', 'user_id', 'customer_id', 'checkout_time', 'beatscheduleid')
-                ->latest();
+            // $data = CheckIn::with('users:id,name', 'customers:id,name,mobile', 'customers.customeraddress', 'beatschedules.beats', 'visitreports', 'orders_sum')
+            //     ->whereHas('users', function ($query) use ($userids, $request) {
+            //         if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
+            //             $query->whereIn('id', $userids);
+            //         }
+            //         if ($request->user_id && $request->user_id != null && $request->user_id != '') {
+            //             $query->where('user_id', $request->user_id);
+            //         }
+            //         if ($request->division_id && $request->division_id != null && $request->division_id != '') {
+            //             $query->where('division_id', $request->division_id);
+            //         }
+            //         if ($request->branch_id && $request->branch_id != null && $request->branch_id != '') {
+            //             $query->where('branch_id', $request->branch_id);
+            //         }
+            //         if ($request->start_date && $request->start_date != null && $request->start_date != '' && $request->end_date && $request->end_date != null && $request->end_date != '') {
+            //             $startDate = date('Y-m-d', strtotime($request->start_date));
+            //             $endDate = date('Y-m-d', strtotime($request->end_date));
+            //             $query->whereDate('checkin_date', '>=', $startDate)
+            //                 ->whereDate('checkin_date', '<=', $endDate);
+            //         }
+            //     })
+            //     ->select('id', 'checkin_date', 'checkin_time', 'user_id', 'customer_id', 'checkout_time', 'beatscheduleid')
+            //     ->latest();
+
+
+
+            $data = CheckIn::with(
+        'user:id,name',
+        'customer:id,name,mobile',
+        'customer.customeraddress',
+        'beatschedule.beats',
+        'visitreport',
+        'orders'
+    )
+    ->whereHas('user', function ($query) use ($userids, $request) {
+
+        if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
+            $query->whereIn('id', $userids);
+        }
+
+        if ($request->user_id) {
+            $query->where('id', $request->user_id);
+        }
+
+        if ($request->division_id) {
+            $query->where('division_id', $request->division_id);
+        }
+
+        if ($request->branch_id) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        if ($request->start_date && $request->end_date) {
+            $startDate = date('Y-m-d', strtotime($request->start_date));
+            $endDate = date('Y-m-d', strtotime($request->end_date));
+
+            $query->whereDate('checkin_date', '>=', $startDate)
+                  ->whereDate('checkin_date', '<=', $endDate);
+        }
+    })
+    ->select(
+        'id',
+        'checkin_date',
+        'checkin_time',
+        'user_id',
+        'customer_id',
+        'checkout_time',
+        'beatscheduleid'
+    )
+    ->latest();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('visit_time', function ($query) {
@@ -358,7 +405,7 @@ class ReportController extends Controller
                 })
                 ->addColumn('uniquesku', function ($query) {
                     //return $query['orders']->sum('total_qty');
-                    return $query->orders_sum->sum('grand_total') ?? 0;
+                    return $query->orders_sum ? $query->orders_sum->sum('grand_total') : 0;
                 })
                 ->addColumn('uniqueorder', function ($query) {
                     return $query['orders']->count();
@@ -491,16 +538,21 @@ class ReportController extends Controller
                 })
 
                 ->addColumn('current_status', function ($query) {
-                    $status = '';
-                    if ($query->attendance_status == '0') {
-                        $status = 'pending';
-                    } elseif ($query->attendance_status == '1') {
-                        $status = 'approved';
-                    } else {
-                        $status = 'rejected';
-                    }
-                    return $status;
-                })
+    $status = '';
+    if ($query->attendance_status == '0') {
+        $status = 'Pending';
+    } elseif ($query->attendance_status == '1') {
+        // Check if it was auto-approved
+        if (str_contains($query->remark_status, 'Auto-approved')) {
+            $status = '<span class="badge badge-success">Auto-Approved (8+ hrs)</span>';
+        } else {
+            $status = '<span class="badge badge-success">Approved</span>';
+        }
+    } else {
+        $status = '<span class="badge badge-danger">Rejected</span>';
+    }
+    return $status;
+})
 
                 ->addColumn('punchout', function ($query) {
                     $punchout_image = !empty($query->punchout_image) ? env('IMAGE_UPLOADS') . $query->punchout_image : asset('assets/img/placeholder.jpg');
@@ -687,17 +739,22 @@ class ReportController extends Controller
                     return isset($data->punchin_date) ? stringtodate($data->punchin_date) : '';
                 })
 
-                ->addColumn('current_status', function ($query) {
-                    $status = '';
-                    if ($query->attendance_status == '0') {
-                        $status = 'pending';
-                    } elseif ($query->attendance_status == '1') {
-                        $status = 'approved';
-                    } else {
-                        $status = 'rejected';
-                    }
-                    return $status;
-                })
+->addColumn('current_status', function ($query) {
+    $status = '';
+    if ($query->attendance_status == '0') {
+        $status = 'Pending';
+    } elseif ($query->attendance_status == '1') {
+        // Check if it was auto-approved
+        if (str_contains($query->remark_status, 'Auto-approved')) {
+            $status = '<span class="badge badge-success">Auto-Approved (8+ hrs)</span>';
+        } else {
+            $status = '<span class="badge badge-success">Approved</span>';
+        }
+    } else {
+        $status = '<span class="badge badge-danger">Rejected</span>';
+    }
+    return $status;
+})
 
 
                 // ->editColumn('punchout_date', function($data)

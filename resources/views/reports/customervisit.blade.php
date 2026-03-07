@@ -134,8 +134,8 @@
             "defaultContent": ''
           },
           {
-            data: 'users.name',
-            name: 'users.name',
+            data: 'user.name',
+            name: 'user.name',
             "defaultContent": '',
             orderable: false,
             searchable: false

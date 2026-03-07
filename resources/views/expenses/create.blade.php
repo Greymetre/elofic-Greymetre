@@ -34,11 +34,13 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="input_section">
-                  <label class="col-form-label">{{ trans('panel.expenses.fields.user') }}<span class="text-danger"> *</span></label>
+                                    <label class="col-form-label">Employee<span class="text-danger"> *</span></label>
+
+                  <!-- <label class="col-form-label">{{ trans('panel.expenses.fields.user') }}<span class="text-danger"> *</span></label> -->
                   
                     <div class="form-group has-default bmd-form-group">
                       <select name="user_id" id="user_id" class="form-control {{ $errors->has('user_id') ? 'is-invalid' : '' }} select2">
-                        <option value="" disabled selected>Please Select User</option>
+                        <option value="" disabled selected>Please Select Employee</option>
                         @foreach($users as $k=>$user)
                         <option value="{{$user->id}}">{{$user->name}}</option>
                         @endforeach

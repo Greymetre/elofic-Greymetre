@@ -46,9 +46,12 @@
                  
                     <div class="form-group has-default bmd-form-group">
                       <select name="payroll_id" id="payroll_id" class="form-control {{ $errors->has('payroll_id') ? 'is-invalid' : '' }}">
-                        <option value="" disabled selected>Please select pay roll</option>
+                        <option value="" disabled selected>Please select Grade</option>
                         @foreach($pay_rolls as $key=>$payroll)
-                        <option {{$expensesType->payroll_id == $key?'selected':''}}  value="{{$key}}">{{$payroll}}</option>
+                                                <option {{$expensesType->payroll_id == $key?'selected':''}}  value="{{$key}}">Grade {{$key}}</option>
+
+                        <!-- <option {{$expensesType->payroll_id == $key?'selected':''}}  value="{{$key}}">{{$payroll}}</option> -->
+
                         @endforeach
                       </select>
                       @if($errors->has('name'))

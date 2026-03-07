@@ -20,6 +20,8 @@ use LDAP\Result;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\MarketingActivity;
+use App\Models\SecondaryCustomer;        
+use App\Models\MasterDistributor;
 
 
 class AjaxController extends Controller
@@ -436,50 +438,133 @@ class AjaxController extends Controller
         }
     }
 
-    public function getRetailerlist(Request $request)
-    {
-        try {
-            $state = $request->input('state_id');
-            $district = $request->input('district_id');
-            $city = $request->input('city_id');
-            $users = $request->input('user_id');
-            $data = Customers::where(function ($query) use ($users) {
-                // if (isset($users)) {
-                //     $query->whereIn('executive_id', $users);
-                // }
-                $query->where('active', '=', 'Y');
-            })
-                ->whereHas('customeraddress', function ($query) use ($state, $district, $city) {
-                    if (isset($state)) {
-                        $query->where('state_id', '=', $state);
-                    }
-                    if (is_array($district)) {
-                        if (count($district) > 0) {
-                            $query->whereIn('district_id', $district);
-                        }
-                    } else {
-                        if (isset($district)) {
-                            $query->where('district_id', '=', $district);
-                        }
-                    }
-                    if (is_array($city)) {
-                        if (count($city) > 0) {
-                            $query->whereIn('city_id', $city);
-                        }
-                    } else {
-                        if (isset($city)) {
-                            $query->where('city_id', '=', $city);
-                        }
-                    }
-                })
-                ->select('id', 'name', 'mobile', 'first_name', 'last_name')
-                ->orderBy('name', 'asc')
-                ->get();
-            return response()->json($data);
-        } catch (\Exception $e) {
-            return $e;
+
+public function getRetailerlist(Request $request)
+{
+    try {
+
+        $state    = $request->input('state_id');
+        $district = $request->input('district_id');
+        $city     = $request->input('city_id');
+
+        $districtIds  = is_array($district) ? $district : ($district ? [$district] : []);
+        $cityIds      = is_array($city) ? $city : ($city ? [$city] : []);
+
+        /* ---------- Retailers ---------- */
+
+        $retailers = SecondaryCustomer::query()
+            ->select([
+                'id',
+                'shop_name as name',
+                'mobile_number as mobile',
+                'state_id',
+                'district_id',
+                'city_id'
+            ])
+            ->selectRaw("'retailer' as type");
+
+        if ($state) {
+            $retailers->where('state_id', $state);
         }
+
+        if (!empty($districtIds)) {
+            $retailers->whereIn('district_id', $districtIds);
+        }
+
+        if (!empty($cityIds)) {
+            $retailers->whereIn('city_id', $cityIds);
+        }
+
+        /* ---------- Distributors ---------- */
+
+        $distributors = MasterDistributor::query()
+            ->select([
+                'id',
+                'trade_name as name',
+                'mobile',
+                'billing_state as state_id',
+                'billing_district as district_id',
+                'billing_city as city_id'
+            ])
+            ->selectRaw("'distributor' as type");
+
+        if ($state) {
+            $distributors->where('billing_state', $state);
+        }
+
+        if (!empty($districtIds)) {
+            $distributors->whereIn('billing_district', $districtIds);
+        }
+
+        if (!empty($cityIds)) {
+            $distributors->whereIn('billing_city', $cityIds);
+        }
+
+        /* ---------- Merge Both ---------- */
+
+        $data = $retailers
+            ->unionAll($distributors)
+            ->orderBy('name','asc')
+            ->get();
+
+        return response()->json($data);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file'  => $e->getFile(),
+            'line'  => $e->getLine()
+        ], 500);
     }
+}
+
+
+
+    // public function getRetailerlist(Request $request)
+    // {
+    //     try {
+    //         $state = $request->input('state_id');
+    //         $district = $request->input('district_id');
+    //         $city = $request->input('city_id');
+    //         $users = $request->input('user_id');
+    //         $data = Customers::where(function ($query) use ($users) {
+    //             // if (isset($users)) {
+    //             //     $query->whereIn('executive_id', $users);
+    //             // }
+    //             $query->where('active', '=', 'Y');
+    //         })
+    //             ->whereHas('customeraddress', function ($query) use ($state, $district, $city) {
+    //                 if (isset($state)) {
+    //                     $query->where('state_id', '=', $state);
+    //                 }
+    //                 if (is_array($district)) {
+    //                     if (count($district) > 0) {
+    //                         $query->whereIn('district_id', $district);
+    //                     }
+    //                 } else {
+    //                     if (isset($district)) {
+    //                         $query->where('district_id', '=', $district);
+    //                     }
+    //                 }
+    //                 if (is_array($city)) {
+    //                     if (count($city) > 0) {
+    //                         $query->whereIn('city_id', $city);
+    //                     }
+    //                 } else {
+    //                     if (isset($city)) {
+    //                         $query->where('city_id', '=', $city);
+    //                     }
+    //                 }
+    //             })
+    //             ->select('id', 'name', 'mobile', 'first_name', 'last_name')
+    //             ->orderBy('name', 'asc')
+    //             ->get();
+    //         return response()->json($data);
+    //     } catch (\Exception $e) {
+    //         return $e;
+    //     }
+    // }
 
     public function getProductInfo(Request $request)
     {
@@ -1239,43 +1324,82 @@ class AjaxController extends Controller
         }
     }
 
+    // public function getTourPlanByUserAndDate(Request $request)
+    // {
+    //     try {
+    //         $data = TourProgramme::where('date', $request->date)->where('userid', $request->user_id)->first();
+    //         if ($data && $data != NULL && !empty($data)) {
+    //             $response = ['status' => true, 'data' => $data];
+                
+    //             return response()->json($response);
+    //         } else {
+    //             $response = ['status' => false, 'data' => $data];
+    //             return response()->json($response);
+    //         }
+    //     } catch (\Exception $e) {
+    //         return $e;
+    //     }
+    // }
     public function getTourPlanByUserAndDate(Request $request)
-    {
-        try {
-            $data = TourProgramme::where('date', $request->date)->where('userid', $request->user_id)->first();
-            if ($data && $data != NULL && !empty($data)) {
-                $response = ['status' => true, 'data' => $data];
-                return response()->json($response);
-            } else {
-                $response = ['status' => false, 'data' => $data];
-                return response()->json($response);
-            }
-        } catch (\Exception $e) {
-            return $e;
-        }
-    }
-    public function userCityList(Request $request)
-    {
-        try {
-            $cityname = $request->input('cityname');
-            $user_id = $request->user()->id;
-            $cityids = UserCityAssign::where('userid', '=', $user_id)->pluck('city_id')->toArray();
-            //$data = City::whereIn('id',$cityids)->select('id','city_name', 'grade')->orderBy('city_name','asc')->get();
+{
+    try {
+        $data = TourProgramme::with('cityRelation')
+            ->where('date', $request->date)
+            ->where('userid', $request->user_id)
+            ->first();
 
-            $data = City::whereIn('id', $cityids)->select('id', 'city_name', 'grade');
-            if ($cityname) {
-                $data->where('city_name', 'LIKE', trim($cityname) . '%');
-            }
-            $data = $data->orderBy('city_name', 'asc')->get();
-
-            if ($data->isNotEmpty()) {
-                return response()->json(['status' => 'success', 'message' => 'Data retrieved successfully.', 'data' => $data], 200);
-            }
-            return response(['status' => 'error', 'message' => 'No Record Found.', 'data' => $data], 200);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        if ($data) {
+            return response()->json([
+                'status' => true,
+                'data' => $data
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'data' => null
+            ]);
         }
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => $e->getMessage()
+        ]);
     }
+}
+public function userCityList(Request $request)
+{
+    try {
+        $cityname = $request->input('cityname');
+        $user_id = $request->input('user_id'); // 👈 payload wala id
+
+        $cityids = UserCityAssign::where('userid', $user_id)
+                    ->pluck('city_id')
+                    ->toArray();
+
+        $data = City::whereIn('id', $cityids)
+                    ->select('id', 'city_name', 'district_id', 'grade');
+
+        if ($cityname) {
+            $data->where('city_name', 'LIKE', trim($cityname) . '%');
+        }
+
+        $data = $data->orderBy('city_name', 'asc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data retrieved successfully.',
+            'user_id_used' => $user_id, // 👈 confirmation ke liye
+            'data' => $data
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
 
     public function getProductInfoBySerialNo(Request $request)
     {

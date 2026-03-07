@@ -408,8 +408,8 @@ if (! function_exists('getLatLongToCity')) {
         $addressline = '';
         $queryString = http_build_query([
             //   'access_key' => 'd342b3255ee297b500728db66a690965',
-            'access_key' => 'cb11435aa9960016039084830621463b',
-
+            // 'access_key' => 'cb11435aa9960016039084830621463b',
+                'access_key' =>  'e727778f743ed01f73374ab767583009',
             'query' => "$latitude,$longitude",
             'output' => 'json',
             'limit' => 1,
@@ -1314,4 +1314,38 @@ if (!function_exists('numberToWords')) {
 
         return $negative . trim($result) . " Rupees" . $points . " Only";
     }
+}
+
+
+function getRoadDistance($lat1,$lng1,$lat2,$lng2)
+{
+    $apiKey = "AIzaSyAVSDwHbKULnZa93kYpYINTqX4eaWy9q18";
+
+    $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=".$lat1.",".$lng1."&destinations=".$lat2.",".$lng2."&key=".$apiKey;
+
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    curl_close($ch);
+
+    $result = json_decode($response,true);
+    dd([
+    'result' => $result
+    
+]);
+
+    if(isset($result['rows'][0]['elements'][0]['distance']['value']))
+    {
+        $meters = $result['rows'][0]['elements'][0]['distance']['value'];
+
+        $km = $meters / 1000;
+
+        return round($km,2);
+    }
+
+    return '';
 }

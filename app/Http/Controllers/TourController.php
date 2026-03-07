@@ -20,6 +20,7 @@ use App\Models\City;
 use App\Imports\TourImport;
 use App\Exports\TourExport;
 use App\Models\Division;
+use App\Models\UserCityAssign;
 
 class TourController extends Controller
 {
@@ -103,7 +104,7 @@ class TourController extends Controller
     
         if ($request->ajax()) {
              // $data = TourProgramme::with('customertypes','firmtypes','createdbyname')
-               $data = TourProgramme::with('userinfo')->where(function ($query) use ($request , $all_reporting_user_ids) {
+               $data = TourProgramme::with('userinfo', 'city', 'districtRelation')->where(function ($query) use ($request , $all_reporting_user_ids) {
                             if(!empty($request['executive_id']))
                             {
                                 $query->where('userid', $request['executive_id']);
@@ -132,7 +133,9 @@ class TourController extends Controller
                             {
                                 $query->whereIn('userid',$all_reporting_user_ids);
                             }
-                        })->orderBy(DB::raw('YEAR(date)'), 'DESC')->orderBy(DB::raw('DATE(date)'), 'ASC');
+                            
+                        })->orderBy('created_at', 'desc');
+                        // ->orderBy(DB::raw('YEAR(date)'), 'DESC')->orderBy(DB::raw('DATE(date)'), 'ASC');
             return Datatables::of($data)
                     ->addIndexColumn()
                     ->addColumn('checkbox', function ($item) {
@@ -253,106 +256,118 @@ class TourController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        foreach($request->detail as $datas){
-            $validator = Validator::make($datas, [
-                'date' => 'required',
-                'userid' => 'required',
-                'town' => 'required',
-                'objectives' => 'required',
-            ]); 
-            if ($validator->fails()) {
-                return redirect()->back()
-                            ->withErrors($validator)
-                            ->withInput();
-            }
-        }
-        try
-        { 
-            $permission = !empty($request['id']) ? 'tour_edit' : 'tour_create' ;
-            //abort_if(Gate::denies($permission), Response::HTTP_FORBIDDEN, '403 Forbidden');
-            if(!empty($request['detail']))
-            {
-                foreach ($request['detail'] as $key => $value) {
-                    $tours = TourProgramme::updateOrCreate(
-                        [
-                            'date' => isset($value['date']) ? $value['date'] : null, 
-                            'userid' => isset($value['userid']) ? $value['userid'] : null,
-                        ],
-                        [
-                            'date' => isset($value['date']) ? $value['date'] : null, 
-                            'userid' => isset($value['userid']) ? $value['userid'] : null,
-                            'town' => isset($value['town']) ? $value['town'] : '',
-                            'objectives' => isset($value['objectives']) ? $value['objectives'] : '',
-                        ]
-                    );
-                    $towns = explode(',', $value['town']);
-                    foreach ($towns as $key => $town) {
-                        $cityid = City::where('city_name','=',$town)->pluck('id')->first();
+public function store(Request $request)
 
-                        $visited = TourDetail::whereHas('tourinfo',function($query) use($value){
-                                                $query->where('userid','=',$value['userid']);
-                                            })
-                                            ->where('visited_cityid','=',$cityid)
-                                            ->whereNotNull('visited_date')
-                                            ->select('visited_date')
-                                            ->latest()
-                                            ->first();                
-                        $lastvisited = (isset($cityid) && !empty($visited)) ? $visited['visited_date'] : null;
-                        TourDetail::create([
-                            'tourid' => isset($tours->id) ? $tours->id : null,
-                            'city_id' => isset($cityid) ? $cityid : null, 
-                            'last_visited' => isset($lastvisited) ? $lastvisited : null,
-                        ]); 
-                    }
-                }
-                return Redirect::to('tours')->with('message_success', 'TourProgramme Store Successfully');
-            }
-            return redirect()->back()->with('message_danger', 'Error in Data Store')->withInput();  
-        }        
-        catch(\Exception $e)
-        {
-          return redirect()->back()->withErrors($e->getMessage())->withInput();
+{
+    $request->validate([
+        'detail'                 => 'required|array|min:1',
+        'detail.*.date'          => 'required|date',
+        'detail.*.userid'        => 'required|exists:users,id',
+        'detail.*.district'      => 'nullable|string|max:100',     // string name
+        'detail.*.city'          => 'required|string|max:100',     // string name
+        'detail.*.objectives'    => 'nullable|string|max:500',
+    ]);
+
+        // $cityId = City::where('city_name', $data['city'])->value('id');
+// $districtId = \App\Models\District::where('district_name', $data['district'])->value('id');
+
+
+    foreach ($request->detail as $data) {
+
+        $tour = TourProgramme::updateOrCreate(
+            [
+                'date'   => $data['date'],
+                'userid' => $data['userid'],
+            ],
+            [
+                'date'       => $data['date'],
+                'userid'     => $data['userid'],
+                'town'       => $data['city']     ?? null,      // ← city name (string)
+                'district'   => $data['district'] ?? null,      // ← district name (string)
+                'objectives' => $data['objectives'] ?? null,
+                'status'     => 0,  // or your default value
+            ]
+        );
+
+        // Optional: still try to link TourDetail if city name exists
+        $city = City::where('city_name', trim($data['city'] ?? ''))->first();
+
+        if ($city) {
+            TourDetail::updateOrCreate(
+                [
+                    'tourid'  => $tour->id,
+                    'city_id' => $city->id,
+                ],
+                [
+                    'tourid'      => $tour->id,
+                    'city_id'     => $city->id,
+                    // 'last_visited' => null,
+                ]
+            );
         }
     }
 
-    public function update(Request $request)
-    {
-        abort_if(Gate::denies('tasks_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-            TourProgramme::where('id',$request['id'])->update([
-                'date' => isset($request['date']) ? $request['date'] : null, 
-                'userid' => isset($request['userid']) ? $request['userid'] : null,
-                'town' => isset($request['town']) ? $request['town'] : '',
-                'objectives' => isset($request['objectives']) ? $request['objectives'] : '',
-            ]);
-            $towns = explode(',', $request['town']);
-            foreach ($towns as $key => $town) {
-                $cityid = City::where('city_name','=',$town)->pluck('id')->first();
-                $visited = TourDetail::whereHas('tourinfo',function($query) use($request){
-                                        $query->where('userid','=',$request['userid']);
-                                    })
-                                    ->where('visited_cityid','=',$cityid)
-                                    ->whereNotNull('visited_date')
-                                    ->select('visited_date')
-                                    ->latest()
-                                    ->first();                
-                $lastvisited = (isset($cityid) && !empty($visited)) ? $visited['visited_date'] : null;
-                TourDetail::updateOrCreate(['tourid' => $request['id'], 'city_id' => $cityid],[
-                    'tourid' => isset($request['id']) ? $request['id'] : null,
-                    'city_id' => isset($cityid) ? $cityid : null, 
-                    'last_visited' => isset($lastvisited) ? $lastvisited : null,
-                ]); 
-            }
-        return redirect()->back()->with('message_danger', 'Error in Tour Update')->withInput(); 
+    return redirect()
+        ->route('tours.index') // or wherever you want
+        ->with('success', 'Tour programme created successfully.');
+}
+
+public function update(Request $request)
+{
+    $id = $request->input('id');
+    if (!$id) {
+        return back()->with('error', 'Tour ID missing');
     }
 
-    public function show($id)
-    {
-        $id = decrypt($id);
-        $tours = TourProgramme::find($id);
-        return response()->json($tours);
+    $tour = TourProgramme::findOrFail($id);
+
+    $tour->update([
+        'date'       => $request->input('date'),
+        'userid'     => $request->input('userid'),
+        'town'       => $request->input('town'),       // ← hidden field = city ID
+        'district'   => $request->input('district'),   // ← hidden field = district ID
+        'objectives' => $request->input('objectives', ''),
+    ]);
+
+    // Optional: update TourDetail if needed
+    if ($tour->town) {
+        $lastVisited = TourDetail::where('city_id', $tour->town)
+            ->whereHas('tourinfo', fn($q) => $q->where('userid', $tour->userid))
+            ->whereNotNull('visited_date')
+            ->latest('visited_date')
+            ->value('visited_date');
+
+        TourDetail::updateOrCreate(
+            [
+                'tourid'  => $tour->id,
+                'city_id' => $tour->town,
+            ],
+            [
+                'last_visited' => $lastVisited,
+            ]
+        );
     }
+
+    return redirect()->route('tours.index')
+        ->with('success', 'Tour updated successfully');
+}
+
+   public function show($id)
+{
+    $id = decrypt($id);
+    $tour = TourProgramme::findOrFail($id);
+    
+return response()->json([
+        'id'            => $tour->id,
+        'date'          => $tour->date,
+        'userid'        => $tour->userid,
+        'district'      => $tour->district,                         // keep ID (for hidden field)
+        'district_name' => $tour->districtRelation?->district_name ?? '—',
+        'town'          => $tour->town,                             // keep ID
+        'town_name'     => $tour->cityRelation?->city_name ?? '—',
+        'objectives'    => $tour->objectives,
+    ]);
+}
 
 
     /**
@@ -361,13 +376,25 @@ class TourController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //abort_if(Gate::denies('tour_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        $id = decrypt($id);
-        $tours = TourProgramme::find($id);
-        return response()->json($tours);
-    }
+public function edit($id)
+{
+    $id = decrypt($id);
+    $tour = TourProgramme::with(['userinfo', 'cityRelation', 'districtRelation'])->findOrFail($id);
+
+    $districtName = $tour->districtRelation ? $tour->districtRelation->district_name : '';
+    $cityName     = $tour->cityRelation ? $tour->cityRelation->city_name : '';
+
+    return response()->json([
+        'id'         => $tour->id,
+        'date'       => $tour->date,
+        'userid'     => $tour->userid,
+        'district'   => $tour->district,      // still keep ID
+        'district_name' => $districtName,     // name for dropdown
+        'town'       => $tour->town,          // still keep ID
+        'town_name'  => $cityName,            // name for dropdown
+        'objectives' => $tour->objectives,
+    ]);
+}
 
     public function destroy($id)
     {
@@ -440,4 +467,143 @@ class TourController extends Controller
 
 
     }
+    public function getUserTerritory(Request $request)
+{
+    $userId = $request->user_id;
+
+    // Option A: if user has district column (simple)
+    // $user = User::find($userId);
+    // $districts = $user ? explode(',', $user->districts ?? '') : [];
+
+    // Option B: better – assume you have relation or query from tour details / assigned territories
+    // Example: get distinct districts user has entries for
+    $districts = TourDetail::whereHas('tourinfo', function($q) use ($userId) {
+            $q->where('userid', $userId);
+        })
+        ->join('cities', 'tour_details.city_id', '=', 'cities.id')
+        ->distinct()
+        ->pluck('cities.district_name')   // ← assuming you have district_name in cities table
+        ->map(function($name) {
+            return ['district' => $name];
+        });
+
+    // Or hard-coded / from user meta / pivot table
+    // $districts = UserDistrict::where('user_id', $userId)->get(['district']);
+
+    return response()->json([
+        'districts' => $districts
+    ]);
+}
+
+public function getCitiesByDistrictAndUser(Request $request)
+{
+    $userId   = $request->user_id;
+    $district = $request->district;
+
+    $cities = City::where('district_name', $district)
+        ->whereIn('id', function($q) use ($userId) {
+            $q->select('city_id')
+              ->from('tour_details')
+              ->whereHas('tourinfo', fn($sq) => $sq->where('userid', $userId));
+        })
+        ->get(['city_name']);
+
+    // Or simpler if all cities in district are allowed:
+    // $cities = City::where('district_name', $district)->get(['city_name']);
+
+    return response()->json([
+        'cities' => $cities
+    ]);
+}
+public function ajaxUserCities(Request $request)
+{
+    $userId = $request->input('user_id');
+
+    if (!$userId || !is_numeric($userId)) {
+        return response()->json(['cities' => []]);
+    }
+
+    $assignments = UserCityAssign::where('userid', $userId)
+        ->with('cityname.districtname')          // eager load both
+        ->get();
+
+    $cities = $assignments->map(function ($assign) {
+        $city = $assign->cityname;
+
+        // Skip if city doesn't exist
+        if (!$city) {
+            return null;
+        }
+
+        // Safely get district name (handles null district relation)
+        $districtName = $city->districtname ? $city->districtname->district_name : '';
+
+        return [
+            'id'           => $city->id,
+            'city_name'    => $city->city_name ?? 'Unknown City',
+            'district_name'=> $districtName,
+        ];
+    })
+    ->filter()           // remove null entries
+    ->values();          // re-index array
+
+    return response()->json([
+        'cities' => $cities
+    ]);
+}
+
+// In TourController.php
+
+/**
+ * Get distinct districts (with IDs) that the user has cities assigned to
+ */
+// TourController.php
+
+public function ajaxUserDistricts(Request $request)
+{
+    $userId = $request->input('user_id');
+
+    if (!$userId || !is_numeric($userId)) {
+        return response()->json(['districts' => []]);
+    }
+
+    $districts = UserCityAssign::query()
+        ->where('userid', $userId)
+        ->join('cities', 'user_city_assigns.city_id', '=', 'cities.id')
+        ->join('districts', 'cities.district_id', '=', 'districts.id')
+        ->distinct()
+        ->select('districts.id', 'districts.district_name')
+        ->orderBy('districts.district_name')
+        ->get()
+        ->map(fn($d) => [
+            'id'   => (int) $d->id,
+            'name' => $d->district_name ?? '—',
+        ]);
+
+    return response()->json(['districts' => $districts]);
+}
+
+public function ajaxUserCitiesByDistrict(Request $request)
+{
+    $userId     = $request->input('user_id');
+    $districtId = $request->input('district_id'); // FIXED
+
+    if (!$userId || !$districtId) {
+        return response()->json(['cities' => []]);
+    }
+
+    $cities = UserCityAssign::query()
+        ->where('userid', $userId)
+        ->join('cities', 'user_city_assigns.city_id', '=', 'cities.id')
+        ->where('cities.district_id', $districtId) // FILTER BY ID
+        ->select(
+            'cities.id',
+            'cities.city_name as name'
+        )
+        ->orderBy('cities.city_name')
+        ->get();
+
+    return response()->json(['cities' => $cities]);
+}
+
 }

@@ -33,7 +33,7 @@ return [
         'products'          => 'Products',
         'gifts'             => 'Gifts',
         'brands'            => 'Brand',
-        'branches'          => 'Branch',
+        'branches'          => 'Zone',
         'units'             => 'Units',
         'order_master'      => 'Orders',
         'orders'            => 'Orders',
@@ -947,7 +947,7 @@ return [
             'display_name'      => 'Display Name',
             'rate'       => 'Rate',
             'allowance_type' => 'Allowance Type',
-            'pay_roll' => 'Pay Roll',
+            'pay_roll' => 'Grade',
         ],
     ],
 
@@ -1076,7 +1076,7 @@ return [
         'university_name'   => 'University Name',
         'point'             => 'Point',
         'year'              => 'Year',
-        'branch_name'       => 'Branch Name',
+        'branch_name'       => 'Zone',
         'branch_code'       => 'Branch Code',
         'division'          => 'Division',
         

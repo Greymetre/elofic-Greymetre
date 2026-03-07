@@ -27,6 +27,7 @@
     <script src="{{ asset('assets/js/plugins/moment.min.js') }}"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
     <meta http-equiv="Cache-Control" content="no-store" />
     <style>
     .iconimg {
@@ -1476,7 +1477,7 @@
                                     <li class="nav-link-btn {{ request()->is('branch*') ? 'active' : '' }}">
                                         <a class="hoveradd2" href="{{ url('branches') }}">
                                             <i class="material-icons icon">meeting_room</i>
-                                            <span>Branch</span>
+                                            <span>Zone</span>
                                             <div class="d-none mobile_hide"> Branch</div>
                                         </a>
                                     </li>
@@ -2208,6 +2209,7 @@
                                 </a>
                             </li>
                             @endif
+                            
                         </ul>
                     </div>
                 </li>
@@ -2239,9 +2241,9 @@
                 <li class="nav-link {{ request()->is('beats*') || request()->is('beatdetail*') ? 'active' : '' }}">
                     <a class="collapsed hoveradd" data-toggle="collapse" href="#beatMenu" aria-expanded="false">
                         <i class="material-icons icon">houseboat</i>
-                        <span> Beats
+                        <span> Beats Management
                         </span>
-                        <div class="d-none mobile_hide"> Beats</div>
+                        <div class="d-none mobile_hide"> Beats Management</div>
                     </a>
                     <div class="collapse" id="beatMenu" style="">
                         <ul class="navd">

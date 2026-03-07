@@ -1,4 +1,20 @@
 <x-app-layout>
+	<style>
+		.scroll-card {
+    height: 350px;          /* Fixed height */
+    overflow-y: auto;       /* Vertical scroll */
+    overflow-x: hidden;     /* Horizontal scroll hide */
+}
+
+.scroll-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scroll-card::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+	</style>
 <div class="card  mt-0 p-0 new_bg_card">
 
 		<div class="card-header card-header-icon card-header-theme">
@@ -16,7 +32,8 @@
 						<div class="manu_row">
 							<div class="d-flex align-items-center justify-content-between">
 								<h4 class="mb-0 font-weight-bolder">Beat Information</h4> 
-							<a href="javascript:;" style="color: #fff;">
+								<a href="{{ route('beats.edit', encrypt($beats->id)) }}" style="color: #fff;">
+							<!-- <a href="javascript:;" style="color: #fff;"> -->
 								 <!-- <i class="fas fa-user-edit text-sm" data-bs-toggle="tooltip" data-bs-placement="top" aria-hidden="true" aria-label="Edit Profile"></i> -->
 								 <i class="material-icons icon" data-bs-toggle="tooltip" data-bs-placement="top" aria-hidden="true" aria-label="Edit Profile">edit</i></a></div>
 						</div>
@@ -51,7 +68,7 @@
 
 
 				
-					<div class="card-body">
+					<div class="card-body scroll-card">
 						<ul class="list-group"> 
               @if($customers) 
               @foreach($customers as $key => $customer )
@@ -67,7 +84,7 @@
 				<div class="card card-plain h-100">
 					<div class="card-header pt-0">
 						<h4 class="mb-0 font-weight-bolder">Beat Scheduled</h4> </div>
-					<div class="card-body">
+					<div class="card-body scroll-card">
 						<ul class="list-group"> @if($beats->exists && isset($schedules)) @foreach($schedules as $key => $schedule )
 							<li class="list-group-item p-0 mb-3">
 								<div class="avatar me-3"> @if($schedule['users']['profile_image'])<img src="{!! $schedule['users']['profile_image'] !!}" alt="kal" class="rounded-circle" width="50px"> @endif </div>

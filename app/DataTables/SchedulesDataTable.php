@@ -49,6 +49,13 @@ class SchedulesDataTable extends DataTable
                                     <i class="material-icons">schedule</i>
                                 </a>';
                 }
+if (auth()->user()->can(['beat_delete'])) {
+    $btn .= '
+        <button data-id="'.encrypt($query->id).'" 
+            class="btn btn-danger btn-sm btn-just-icon deleteBeat">
+            <i class="material-icons">cancel</i>
+        </button>';
+}
                 return '<div class="btn-group btn-group-sm" role="group" aria-label="Small button group">
                                 ' . $btn . '
                             </div>';
@@ -62,17 +69,51 @@ class SchedulesDataTable extends DataTable
      * @param \App\Schedule $model
      * @return \Illuminate\Database\Eloquent\Builder
      */
+    // public function query(Beat $model)
+    // {
+    //     $userids = getUsersReportingToAuth();
+    //     $data = $model->with('createdbyname', 'countryname', 'statename')
+    //         ->whereHas('beatusers', function ($query) use ($userids) {
+    //             if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
+    //                 $query->whereIn('user_id', $userids);
+    //             }
+    //         })->latest()->newQuery();
+    //     return $data;
+    // }
+
     public function query(Beat $model)
-    {
-        $userids = getUsersReportingToAuth();
-        $data = $model->with('createdbyname', 'countryname', 'statename')
-            ->whereHas('beatusers', function ($query) use ($userids) {
-                if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
-                    $query->whereIn('user_id', $userids);
-                }
-            })->latest()->newQuery();
-        return $data;
+{
+    $userids = getUsersReportingToAuth();
+
+    $query = $model->with('createdbyname', 'countryname', 'statename')
+        ->whereHas('beatusers', function ($q) use ($userids) {
+            if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('Admin')) {
+                $q->whereIn('user_id', $userids);
+            }
+        });
+
+    // 🔥 FILTERS START
+
+  if (request()->beat_id) {
+        $query->where('id', request()->beat_id);
     }
+
+    if (request()->state_id) {
+        $query->where('state_id', request()->state_id);
+    }
+
+    if (request()->district_id) {
+        $query->where('district_id', 'like', '%' . request()->district_id . '%');
+    }
+
+    if (request()->city_id) {
+        $query->where('city_id', 'like', '%' . request()->city_id . '%');
+    }
+
+    // 🔥 FILTERS END
+
+    return $query->latest();
+}
 
     /**
      * Optional method if you want to use html builder.
@@ -85,6 +126,24 @@ class SchedulesDataTable extends DataTable
             ->setTableId('schedules-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
+//             ->minifiedAjax([
+//     'data' => 'function(d) {
+//         d.beat_name   = $("#filter_beat_name").val();
+//         d.state_id    = $("#filter_state").val();
+//         d.district_id = $("#filter_district").val();
+//         d.city_id     = $("#filter_city").val();
+//     }'
+// ])
+
+->ajax([
+    'url' => route('beats.index'),
+    'data' => 'function(d) {
+        d.beat_name   = $("#filter_beat_name").val();
+        d.state_id    = $("#filter_state").val();
+        d.district_id = $("#filter_district").val();
+        d.city_id     = $("#filter_city").val();
+    }'
+])
             ->dom('Bfrtip')
             ->orderBy(1)
             ->buttons(
@@ -105,6 +164,7 @@ class SchedulesDataTable extends DataTable
     {
         return [
             Column::computed('action')
+            ->title('Action')
                 ->exportable(false)
                 ->printable(false)
                 ->width(60)

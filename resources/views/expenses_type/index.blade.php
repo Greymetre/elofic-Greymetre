@@ -56,6 +56,7 @@
               <th>{!! trans('panel.global.action') !!}</th>
               <th>{!! trans('panel.expenses_type.fields.allowance_type') !!}</th>
               <th>{!! trans('panel.role.fields.name') !!}</th>
+              <th>Grade</th>
               <th>{!! trans('panel.expenses_type.fields.rate') !!}</th>
             </thead>
             <tbody>
@@ -79,6 +80,13 @@ $(document).ready(function() {
             {data: 'action', name: 'action',"defaultContent": '', orderable: false, searchable: false},
             {data: 'allowance_type', name: 'allowance_type'},
             {data: 'name', name: 'name',"defaultContent": ''},
+             {
+        data: 'payroll_id',
+        name: 'payroll_id',
+        render: function(data){
+            return 'Grade ' + data;
+        }
+    },
             {data: 'rate', name: 'rate',"defaultContent": ''},
         ]
     });

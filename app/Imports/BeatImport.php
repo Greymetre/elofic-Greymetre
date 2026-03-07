@@ -5,6 +5,9 @@ namespace App\Imports;
 use App\Models\Beat;
 use App\Models\BeatCustomer;
 use App\Models\BeatUser;
+use App\Models\State;
+use App\Models\District;
+use App\Models\City;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -23,7 +26,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 class BeatImport implements ToCollection,WithValidation,WithHeadingRow, WithBatchInserts , WithChunkReading
 {
-    use Importable, SkipsFailures;
+    use Importable;
+    // SkipsFailures;
 
     public function model(array $row)
     {
@@ -41,7 +45,7 @@ class BeatImport implements ToCollection,WithValidation,WithHeadingRow, WithBatc
                 'active' => 'Y',
                 'beat_name' => isset($row['beat_name'])? ucfirst($row['beat_name']):'',
                 'description' => isset($row['description'])? $row['description']:'',
-                'region_id' => isset($row['region_id'])? $row['region_id']:null,
+                // 'region_id' => isset($row['region_id'])? $row['region_id']:null,
                 'country_id' => isset($row['country_id'])? $row['country_id']:null,
                 'state_id' => isset($row['state_id'])? $row['state_id']:null,
                 'district_id' => isset($row['district_id'])? $row['district_id']:null,
@@ -101,6 +105,53 @@ class BeatImport implements ToCollection,WithValidation,WithHeadingRow, WithBatc
     {
         Log::stack(['import-failure-logs'])->info(json_encode($failures));
     }
+
+public function withValidator($validator)
+{
+    $validator->after(function ($validator) {
+
+        foreach ($validator->getData() as $index => $row) {
+
+            $countryId  = $row['country_id'] ?? null;
+            $stateId    = $row['state_id'] ?? null;
+            $districtId = $row['district_id'] ?? null;
+            $cityId     = $row['city_id'] ?? null;
+
+            // State validation
+            if ($stateId && !State::where('id', $stateId)
+                    ->where('country_id', $countryId)
+                    ->exists()) {
+
+                $validator->errors()->add(
+                    "{$index}.state_id",
+                    "The selected state does not belong to the selected country."
+                );
+            }
+
+            // District validation
+            if ($districtId && !District::where('id', $districtId)
+                    ->where('state_id', $stateId)
+                    ->exists()) {
+
+                $validator->errors()->add(
+                    "{$index}.district_id",
+                    "The selected district does not belong to the selected state."
+                );
+            }
+
+            // City validation
+            if ($cityId && !City::where('id', $cityId)
+                    ->where('district_id', $districtId)
+                    ->exists()) {
+
+                $validator->errors()->add(
+                    "{$index}.city_id",
+                    "The selected city does not belong to the selected district."
+                );
+            }
+        }
+    });
+}
 
 
 }

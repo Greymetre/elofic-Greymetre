@@ -647,6 +647,14 @@ Route::group(['middleware' => ['auth']], function () {
     Route::delete('beatcustomer-delete/{id}', [BeatController::class, 'beatCustomerDelete']);
     Route::delete('beat-user-delete/{id}', [BeatController::class, 'beatUserDelete']);
     Route::any('beats-schedule/{id}', [BeatController::class, 'beatsSchedule']);
+    Route::delete('/beats/{id}', [BeatController::class, 'destroy'])
+        ->name('beats.destroy');
+    Route::post('beats/save-individual-schedule', 
+    [BeatController::class, 'saveIndividualSchedule']
+)->name('beats.saveIndividualSchedule');
+
+Route::get('beats-global-schedule-form', [BeatController::class, 'globalScheduleForm'])
+    ->name('beats.globalScheduleForm');
     //Current Location
     Route::any('livelocation', [BeatController::class, 'livelocation']);
     //Attendance
@@ -977,7 +985,19 @@ Route::name('workshops.')->prefix('workshops')->group(function () {
     Route::any('tours-template', [TourController::class, 'template'])->name('tourss.template');
     Route::post('tours-upload', [TourController::class, 'upload'])->name('tours.upload');
     Route::post('tours-changeStatus', [TourController::class, 'changeStatus'])->name('tours.changesttus');
+    // Route::post('get-user-territory', [TourController::class, 'getUserTerritory'])->name('get.user.territory');
+// Route::post('get-cities-by-district-and-user', [TourController::class, 'getCitiesByDistrictAndUser']);
+// Route::post('ajax/user-cities', [TourController::class, 'ajaxUserCities'])->name('ajax.user.cities');
+    Route::get('tours/ajax-user-cities', [TourController::class, 'ajaxUserCities'])
+    ->name('tours.ajaxUserCities');
 
+    
+
+// In routes/web.php
+Route::post('ajax/user-districts', [TourController::class, 'ajaxUserDistricts'])->name('tours.ajaxUserDistricts');
+Route::post('ajax/user-cities-by-district', [TourController::class, 'ajaxUserCitiesByDistrict'])->name('tours.ajaxUserCitiesByDistrict');
+    
+    
     // /Expenses Type
     Route::resource('expenses_type', ExpensesTypeController::class);
     Route::post('expenses-type-active', [ExpensesTypeController::class, 'changeStatus']);
