@@ -9,6 +9,7 @@ use App\Models\Expenses;
 use App\Models\User;
 use App\Models\ExpensesType;
 use App\Models\ExpenseLog;
+use App\Models\City;
 use App\Models\Media;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -110,8 +111,9 @@ class ExpensesController extends Controller
         }
 
         $expensestypes = ExpensesType::get();
+        $cities = City::where('active', 'Y')->select('id', 'city_name')->get();
 
-        return view('expenses.create', compact('users', 'expensestypes'));
+        return view('expenses.create', compact('users', 'expensestypes', 'cities'));
     }
 
     /**
@@ -146,6 +148,7 @@ class ExpensesController extends Controller
                 $data = array(
                     'expenses_type' => $request->expenses_type ?? NULL,
                     'user_id' => $request->user_id ?? NULL,
+                    'city_id' => $request->city_id ?? NULL,
                     'date' => $request->date ?? NULL,
                     'claim_amount' => $request->claim_amount ?? NULL,
                     'start_km' => $request->start_km ?? NULL,
@@ -187,6 +190,7 @@ class ExpensesController extends Controller
                     $data = array(
                         'expenses_type' => $request->expenses_type ?? NULL,
                         'user_id' => $request->user_id ?? NULL,
+                        'city_id' => $request->city_id ?? NULL,
                         'date' => $request->date ?? NULL,
                         'claim_amount' => $request->claim_amount ?? NULL,
                         'start_km' => $request->start_km ?? NULL,
@@ -294,7 +298,9 @@ class ExpensesController extends Controller
         }
 
         $expensestypes = ExpensesType::get();
-        return view('expenses.edit', compact('users', 'expensestypes', 'expense'));
+        $cities = City::where('active', 'Y')->get();
+
+        return view('expenses.edit', compact('users', 'expensestypes', 'expense','cities'));
     }
 
     /**
@@ -332,6 +338,7 @@ class ExpensesController extends Controller
                 $data = array(
                     'expenses_type' => $request->expenses_type ?? NULL,
                     'user_id' => $request->user_id ?? NULL,
+                    'city_id' => $request->city_id ?? NULL,
                     'date' => $request->date ?? NULL,
                     'claim_amount' => $request->claim_amount ?? NULL,
                     'start_km' => $request->start_km ?? NULL,
@@ -349,6 +356,7 @@ class ExpensesController extends Controller
                 $data = array(
                     'expenses_type' => $request->expenses_type ?? NULL,
                     'user_id' => $request->user_id ?? NULL,
+                    'city_id' => $request->city_id ?? NULL,
                     'date' => $request->date ?? NULL,
                     'claim_amount' => $request->claim_amount ?? NULL,
                     'start_km' => NULL,
@@ -544,9 +552,9 @@ class ExpensesController extends Controller
             '#Expense Id',
             'Expense Date',
             'Emp Code',
-            'User Name',
+            'Employee Name',
             'Designation',
-            'Branch',
+            'Zone',
             'Division',
             'Expense Type',
             'Rate',
@@ -1044,4 +1052,32 @@ class ExpensesController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Expense Not Rejected Successfully']);
         }
     }
+
+public function getExpenseByCity(Request $request)
+{
+    $city_id = $request->city_id;
+
+    $city = City::where('id', $city_id)->first();
+
+    $html = "<option value=''>Select Expense Type</option>";
+
+    if ($city) {
+        $grade = $city->grade;
+
+        $expenseTypes = ExpensesType::where(function ($query) use ($grade) {
+            $query->where('class', $grade)
+                  ->orWhereNull('class');
+        })->get();
+
+        foreach ($expenseTypes as $expenseType) {
+            $html .= "<option value='" . $expenseType->id . "' 
+                        data-allowtype='" . $expenseType->allowance_type_id . "' 
+                        data-rate='" . $expenseType->rate . "'>
+                        " . ucwords($expenseType->name) . "
+                      </option>";
+        }
+    }
+
+    return $html;
+}
 }

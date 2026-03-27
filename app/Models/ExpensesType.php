@@ -10,5 +10,5 @@ class ExpensesType extends Model
     use HasFactory;
     protected $table = 'expenses_types';
 
-    protected $fillable = [ 'name', 'rate', 'is_active', 'allowance_type_id', 'created_at', 'updated_at','payroll_id'];
+    protected $fillable = [ 'name', 'rate', 'is_active', 'allowance_type_id', 'created_at', 'updated_at','payroll_id','class'];
 }

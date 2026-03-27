@@ -389,6 +389,11 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('city-active', [CityController::class, 'active'])->name('city.active');
     Route::get('/get-cities/{district_id}', [App\Http\Controllers\CommonController::class, 'getCities'])
      ->name('get.cities');
+    // City AJAX Search for Select2 (Add this line)
+    Route::get('cities/search', [CityController::class, 'search'])
+     ->name('cities.search');
+    Route::post('get-expense-by-city', [ExpensesController::class, 'getExpenseByCity'])->name('getExpenseByCity');
+
 
     //Pincode
     Route::resource('pincode', PincodeController::class);
@@ -474,7 +479,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::any('subcategories-template', [SubCategoryController::class, 'template'])->name('subcategories.template');
     Route::post('subcategories-upload', [SubCategoryController::class, 'upload'])->name('subcategories.upload');
     Route::post('subcategories-active', [SubCategoryController::class, 'active'])->name('subcategories.active');
-
+    Route::get('/get-products-by-subcategory', [ProductController::class, 'getProductsBySubcategory'])->name('getProductsBySubcategory');
+    
     // Sales Target Users
     Route::get('sales_users/target_users', [SalesTargetUsersController::class, 'sales_target_users'])->name('sales_users.target_users');
     Route::post('sales_users/target_users_upload/upload', [SalesTargetUsersController::class, 'target_users_upload'])->name('sales_users.target_users_upload.upload');
@@ -670,7 +676,8 @@ Route::get('beats-global-schedule-form', [BeatController::class, 'globalSchedule
     Route::any('rejectAttendance', [AttendanceController::class, 'rejectAttendance'])->name('rejectAttendance');
 
     Route::any('attendancesummary-download', [AttendanceController::class, 'attendanceSummaryDownload'])->name('attendancesummary.download');
-
+    Route::post('get-tour-and-beat-plan', [AttendanceController::class, 'getTourAndBeatByUserAndDate'])
+    ->name('get.tour.and.beat');
 
 
     //Checkin
@@ -812,6 +819,16 @@ Route::name('workshops.')->prefix('workshops')->group(function () {
     Route::get('/{id}', [SecondaryCustomerController::class, 'show'])->name('show');
     Route::delete('/{id}', [SecondaryCustomerController::class, 'destroy'])->name('destroy');
 });
+
+Route::post('/mechanics/import', [SecondaryCustomerController::class, 'import'])->name('mechanics.import');
+
+Route::post('/retailers/import', [SecondaryCustomerController::class, 'import'])->name('retailers.import');
+
+Route::post('/garages/import', [SecondaryCustomerController::class, 'import'])->name('garages.import');
+
+Route::post('/workshops/import', [SecondaryCustomerController::class, 'import'])->name('workshops.import');
+Route::post('secondary-customers/import', [SecondaryCustomerController::class,'import'])
+    ->name('secondary-customers.import');
 
 // OLD route DELETE kar do ya comment out
 // Route::resource('secondary-customers', SecondaryCustomerController::class);

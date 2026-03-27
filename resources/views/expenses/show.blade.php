@@ -1,3 +1,58 @@
+
+<style>
+
+.activity-timeline{
+position: relative;
+}
+
+.activity-item{
+display: flex;
+align-items: flex-start;
+margin-bottom: 20px;
+}
+
+.activity-icon{
+width: 36px;
+height: 36px;
+background: #00aadb;
+color: white;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 14px;
+margin-right: 10px;
+flex-shrink: 0;
+}
+
+.activity-content{
+background: #f9fafb;
+padding: 10px 12px;
+border-radius: 6px;
+width: 100%;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.activity-title{
+font-weight: 600;
+font-size: 13px;
+color: #007bff;
+}
+
+.activity-user{
+font-size: 12px;
+color: #007bff;
+margin-top: 2px;
+}
+
+.activity-time{
+font-size: 11px;
+color: #888;
+margin-top: 3px;
+}
+</style>
+
+
 <div class="row">
   <div class="col-9">
 
@@ -235,8 +290,14 @@
             <div class="col-sm-6 invoice-col">
               <div class="row">
                 <div class="col-md-6">
-                  <h6>Today Plan - {{$paln->town??""}} </h6>
-                  <h6>Today Visit - {{$paln->town??""}}</h6>
+@php
+$city = null;
+if(!empty($paln) && !empty($paln->town)){
+    $city = \App\Models\City::find($paln->town);
+}
+@endphp
+                  <h6>Today Plan - {{ $city->city_name ?? '' }} </h6>
+                  <h6>Today Visit - {{ $city->city_name  ?? '' }}</h6>
                   <h6>Live Location - <a href="{{url('/livelocation').'?user_id='.$expense->user_id.'&date='.$expense->date}}"><i class="material-icons">location_on</i></a></h6>
                 </div>
                 <div class="col-md-6">
@@ -390,32 +451,53 @@
 
 
 
-  <div class="col-3">
-    <!-- <h4>Time Line</h4> -->
+<div class="col-3">
 
-    <div class="card">
-      <div class="card-body">
-        <!-- <h4>Time Line</h4> -->
+<div class="card">
+<div class="card-body">
 
-        <div class="row">
-          <div class="col-12">
-            <h3 class="card-title pb-3">Time Line</h3>
-            <hr>
-            <p class="lead"></p>
+<h3 class="card-title pb-3">Activity</h3>
+<hr>
 
-            @foreach($logdetails as $logdetail)
-            <p class="text-muted well well-sm shadow-none" style="margin-top: 10px;">
-              {{ trans('panel.expenses.title') }} <b> #{!! $expense['id'] !!} {{$logdetail->status_type??''}}</b>, by <b>{{$logdetail->logusers->employee_codes??''}} {{$logdetail->logusers->name??''}}</b> on {{date("d-m-Y g:i a", strtotime($logdetail->created_at));}}
-            </p>
-            @endforeach
+<div class="activity-timeline">
 
+@foreach($logdetails as $logdetail)
 
-          </div>
+<div class="activity-item">
 
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="activity-icon">
+<i class="fas fa-user-check"></i>
+</div>
+
+<div class="activity-content">
+
+<div class="activity-title">
+{{ trans('panel.expenses.title') }} 
+<strong>#{{ $expense['id'] }}</strong>
+{{$logdetail->status_type ?? ''}}
+</div>
+
+<div class="activity-user">
+{{$logdetail->logusers->employee_codes ?? ''}} 
+{{$logdetail->logusers->name ?? ''}}
+</div>
+
+<div class="activity-time">
+{{ date("d M Y - g:i A", strtotime($logdetail->created_at)) }}
+</div>
+
+</div>
+
+</div>
+
+@endforeach
+
+</div>
+
+</div>
+</div>
+
+</div>
 
 
   <!-- /.row -->
@@ -513,7 +595,10 @@
 
     });
   </script>
-
+<script>
+    var plan = @json($paln);
+    console.log(plan);
+</script> 
   <script type="text/javascript">
     $("document").ready(function() {
       setTimeout(function() {

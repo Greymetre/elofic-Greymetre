@@ -40,11 +40,11 @@
                  
                     <div class="form-group has-default bmd-form-group">
                       <select name="payroll_id" id="payroll_id" class="form-control {{ $errors->has('payroll_id') ? 'is-invalid' : '' }}">
-                        <option value="" disabled selected>Please select Grade</option>
+                        <option value="" disabled selected>Please select Travel Policy</option>
                         @foreach($pay_rolls as $key=>$payroll)
-                                                <option value="{{$key}}">Grade {{$key}}</option>
+                                                <!-- <option value="{{$key}}">Grade {{$key}}</option> -->
 
-                        <!-- <option value="{{$key}}">{{$payroll}}</option> -->
+                        <option value="{{$key}}">{{$payroll}}</option>
                         @endforeach
                       </select>
                       @if($errors->has('name'))
@@ -113,6 +113,31 @@
           
                 </div>
               </div>
+
+              <div class="col-md-6">
+  <div class="input_section">
+    <label class="col-form-label">Class <span class="text-danger"> *</span></label>
+
+    <div class="form-group has-default bmd-form-group">
+      @php
+        $classValue = strtoupper(old('class', $yourModel->class ?? ''));
+      @endphp
+
+<select name="class" id="class" class="form-control">
+  <option value="" disabled {{ $classValue == '' ? 'selected' : '' }}>Please select Class</option>
+  <option value="A" {{ $classValue == 'A' ? 'selected' : '' }}>A</option>
+  <option value="B" {{ $classValue == 'B' ? 'selected' : '' }}>B</option>
+  <option value="C" {{ $classValue == 'C' ? 'selected' : '' }}>C</option>
+</select>
+
+      @if($errors->has('class'))
+      <div class="invalid-feedback">
+        {{ $errors->first('class') }}
+      </div>
+      @endif
+    </div>
+  </div>
+</div>
             </div>
             <div class="pull-right">
               {{ Form::submit('Submit', array('class' => 'btn btn-theme')) }}
@@ -122,5 +147,36 @@
       </div>
     </div>
   </div>
-  <script src="{{ url('/').'/'.asset('assets/js/validation_expenses_type.js') }}"></script>
+  <!-- <script src="{{ url('/').'/'.asset('assets/js/validation_expenses_type.js') }}"></script> -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const nameInput = document.getElementById("name");           // Expenses type name field
+    const classWrapper = document.getElementById("class").closest('.col-md-6');
+    const classSelect = document.getElementById("class");
+
+    function toggleClassField() {
+        if (!nameInput || !classWrapper || !classSelect) return;
+
+        let value = nameInput.value.trim().toUpperCase();
+
+        // Hide Class field if user types "HQ"
+        if (value === "HQ") {
+            classWrapper.style.display = "none";
+            classSelect.disabled = true;
+            classSelect.value = "";                    // Clear value when hidden
+        } else {
+            classWrapper.style.display = "block";
+            classSelect.disabled = false;
+        }
+    }
+
+    // Trigger on every keystroke
+    nameInput.addEventListener("input", toggleClassField);
+    nameInput.addEventListener("change", toggleClassField);   // for paste, etc.
+
+    // Run once when page loads
+    toggleClassField();
+});
+</script>
 </x-app-layout>

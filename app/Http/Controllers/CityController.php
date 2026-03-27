@@ -139,4 +139,5 @@ class CityController extends Controller
         ob_start();
         return Excel::download(new CityTemplate, 'cities.xlsx');
     }
+
 }

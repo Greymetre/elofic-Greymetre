@@ -15,20 +15,21 @@
                  <form method="GET" action="{{ URL::to('expenses-download') }}">
                    <div class="d-flex flex-row">
                      <div class="p-2" style="width:195px;">
-                       <select class="selectpicker" name="payroll" id="payroll" data-style="select-with-transition">
+                       <select class="select2" name="payroll" id="payroll" data-style="select-with-transition">
                          @foreach($pay_rolls as $key=>$payroll)
-                         <option value="{!! $key !!}">{!! $payroll !!}</option>
+                         <!-- <option value="{!! $key !!}">{!! $payroll !!}</option> -->
+                        <option value="{!! $key !!}">Grade {!! $key !!}</option>
                          @endforeach
                        </select>
                      </div>
 
                      <div class="p-2" style="width:195px;">
-                       <select class="selectpicker" name="expenses_type" id="expenses_type" data-style="select-with-transition">
+                       <select class="select2" name="expenses_type" id="expenses_type" data-style="select-with-transition">
                        </select>
                      </div>
 
                      <div class="p-2" style="width:150px;">
-                       <select class="selectpicker1 select2" name="expense_id" id="expense_id" data-style="select-with-transition" title="Select Expense">
+                       <select class="select2" name="expense_id" id="expense_id" data-style="select-with-transition" title="Select Expense">
                          <option value="">Select Expense Id</option>
 
                        </select>
@@ -36,8 +37,10 @@
 
 
                      <div class="p-2" style="width:150px;">
-                       <select class="selectpicker" name="branch_id" id="branch_id" data-style="select-with-transition" title="Select Branch">
-                         <option value="">Select Branch</option>
+                      <!-- <select class="selectpicker" name="branch_id" id="branch_id" data-style="select-with-transition" title="Select Branch"> -->
+
+                       <select class="select2" name="branch_id" id="branch_id" data-style="select-with-transition" title="Select Zone">
+                         <option value="">Select Zone</option>
                          @if(@isset($branches ))
                          @foreach($branches as $branch)
                          <option value="{!! $branch['id'] !!}">{!! $branch['name'] !!}</option>
@@ -48,7 +51,7 @@
 
 
                      <div class="p-2" style="width:150px;">
-                       <select class="selectpicker" name="division_id" id="division_id" data-style="select-with-transition" title="Select Division">
+                       <select class="select2" name="division_id" id="division_id" data-style="select-with-transition" title="Select Division">
                          <option value="">Select Division</option>
                          @if(@isset($divisions ))
                          @foreach($divisions as $division)
@@ -58,13 +61,13 @@
                        </select>
                      </div>
                      <div class="p-2" style="width:150px;">
-                       <select class="select2" name="executive_id" id="executive_id" data-style="select-with-transition" title="Select User">
-                         <option value="">Select User</option>
+                       <select class="select2" name="executive_id" id="executive_id" data-style="select-with-transition" title="Select Employee">
+                         <option value="">Select Employee</option>
                        </select>
                      </div>
 
                      <div class="p-2" style="width:160px;">
-                       <select class="selectpicker" name="status" id="status" data-style="select-with-transition" title="Select Status">
+                       <select class="select2" name="status" id="status" data-style="select-with-transition" title="Select Status">
                          <option value="">Select Status</option>
                          <option value="5">Hold</option>
                          <option value="4">Checked By Reporting</option>
@@ -76,7 +79,7 @@
                      </div>
 
                      <div class="p-2" style="width:160px;">
-                       <select class="selectpicker" name="attechments" id="attechments" data-style="select-with-transition" title="Select Attechments">
+                       <select class="select2" name="attechments" id="attechments" data-style="select-with-transition" title="Select Attechments">
                          <option value="">Select Attechments</option>
                          <option value="yes">Yes</option>
                          <option value="no">No</option>
@@ -169,7 +172,8 @@
                   <th> # </th>
                  <th>{!! trans('panel.expenses.fields.expense_id') !!}</th>
                  <th>Expense Date</th>
-                 <th>{!! trans('panel.expenses.fields.user') !!}</th>
+                 <!-- <th>{!! trans('panel.expenses.fields.user') !!}</th> -->
+                 <th>Employee</th>
                  <th>{!! trans('panel.expenses.fields.designation') !!}</th>
                  <th>{!! trans('panel.expenses.fields.expense_type') !!}</th>
                  <th>{!! trans('panel.expenses.fields.claim_amount') !!}</th>
@@ -177,7 +181,8 @@
                  <th>{!! trans('panel.expenses.fields.expense_status') !!}</th>
                  <th class="lenth_text">{!! trans('panel.expenses.fields.note') !!}</th>
                  <th>{!! trans('panel.expenses.fields.created_at') !!}</th>
-                 <th>{!! trans('panel.expenses.fields.branch') !!}</th>
+                 <!-- <th>{!! trans('panel.expenses.fields.branch') !!}</th> -->
+                  <th>Zone</th>
                  <th>{!! trans('panel.expenses.fields.total_km') !!}</th>
                  <th>{!! trans('panel.global.action') !!}</th>
                  <th>Attechments</th>
@@ -335,7 +340,7 @@
            payroll: payroll
          },
          success: function(res) {
-           var html = '<option value="">Select User</option>';
+           var html = '<option value="">Select Employee</option>';
            $.each(res, function(k, v) {
              html += '<option value="' + v.id + '"> (' + v.employee_codes + ') ' + v.name + '</option>';
            });

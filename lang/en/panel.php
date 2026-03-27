@@ -947,7 +947,7 @@ return [
             'display_name'      => 'Display Name',
             'rate'       => 'Rate',
             'allowance_type' => 'Allowance Type',
-            'pay_roll' => 'Grade',
+            'pay_roll' => 'Travel Policy',
         ],
     ],
 

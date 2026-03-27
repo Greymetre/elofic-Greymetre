@@ -80,13 +80,7 @@ $(document).ready(function() {
             {data: 'action', name: 'action',"defaultContent": '', orderable: false, searchable: false},
             {data: 'allowance_type', name: 'allowance_type'},
             {data: 'name', name: 'name',"defaultContent": ''},
-             {
-        data: 'payroll_id',
-        name: 'payroll_id',
-        render: function(data){
-            return 'Grade ' + data;
-        }
-    },
+            {data: 'payroll_name', name: 'payroll_name'},
             {data: 'rate', name: 'rate',"defaultContent": ''},
         ]
     });

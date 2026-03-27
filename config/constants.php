@@ -13,11 +13,13 @@ return [
         'Other Course',
     ],
     'pay_roll' => [
-        '1' => 'PayRoll-1',
-        '2' => 'PayRoll-2',
-        '3' => 'PayRoll-3',
-        '4' => 'PayRoll-4',
-        '5' => 'PayRoll-5',
+        '1' => 'ASM',
+        '2' => 'ZM',
+        '3' => 'RM',
+        '4' => 'BM',
+        '5' => 'BE',
+        '5' => 'BE',
+        '6' => 'SR.BE',
     ],
     'redeem_mode' => [
         '1' => 'Gift',
